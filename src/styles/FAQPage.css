@@ -1,0 +1,27 @@
+.faq-page {
+  width: 80%;
+  margin: 0 auto;
+  padding: 30px 0;
+  font-family: 'Arial', sans-serif;
+}
+
+.faq-title {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.faq-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.write-button {
+  background-color: black;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 3px;
+}
