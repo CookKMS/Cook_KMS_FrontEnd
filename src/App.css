@@ -1,0 +1,87 @@
+/* ========== 기본 설정 ========== */
+body {
+  font-family: 'Noto Sans KR', 'Segoe UI', sans-serif;
+  background-color: #f9fafb; /* Tailwind gray-50 */
+  margin: 0;
+  padding: 0;
+}
+
+/* ========== 공통 전환 및 애니메이션 ========== */
+.page-transition {
+  transition: all 0.3s ease-in-out;
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========== 탭 스타일 ========== */
+.tab-active {
+  border-bottom: 3px solid #3b82f6;
+  font-weight: 600;
+}
+
+/* ========== 사이드바 카테고리 아이콘 호버 이동 ========== */
+.category-item:hover .category-icon {
+  transform: translateX(5px);
+  transition: transform 0.2s ease-in-out;
+}
+
+/* ========== 검색 결과 카드 호버 스타일 ========== */
+.search-result:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease-in-out;
+}
+
+/* ========== 입력 요소 통일 ========== */
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
+  outline: none;
+}
+
+/* ========== 버튼 리셋 및 커서 ========== */
+button {
+  cursor: pointer;
+}
+
+/* ========== 테이블 행 호버 효과 ========== */
+table tr:hover {
+  background-color: #f9fafb;
+}
+
+/* ========== 스크롤바 (선택 사항) ========== */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+  background: #bbb;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}
+
+/* ========== 반응형 카드 간격 보정 ========== */
+@media (min-width: 768px) {
+  .md\\:gap-6 {
+    gap: 1.5rem; /* Tailwind md:gap-6 보정 */
+  }
+}
