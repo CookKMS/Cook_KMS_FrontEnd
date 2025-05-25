@@ -1,27 +1,37 @@
 import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import '../styles/Header.css';
 
 function Header() {
+  const location = useLocation();
+
+  const menuItems = [
+    { path: '/', label: 'Home' },
+    { path: '/inquiry', label: '1:1 문의' },
+    { path: '/faq', label: 'FAQ' },
+    { path: '/my-inquiries', label: '내 문의내역' }
+  ];
+
   return (
     <header className="main-header">
       <div className="left-section">
         <div className="menu-icon">☰</div>
-        <div className="logo">Plipop</div>
+        <div className="logo">지식관리</div>
         <nav className="nav-menu">
-          <a href="#">SHOP</a>
-          <a href="#">REVIEW</a>
-          <a href="#" className="active">COMMUNITY</a>
-          <a href="#">ABOUT</a>
+          {menuItems.map(item => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`nav-link ${location.pathname === item.path ? 'active' : ''}`}
+            >
+              {item.label}
+            </Link>
+          ))}
         </nav>
       </div>
 
       <div className="right-section">
-        <a href="#">MYPAGE</a>
-        <span>|</span>
-        <div className="profile">
-          <span className="user">PLIPOP</span>
-          <span className="badge">42</span>
-        </div>
+        <Link to="/login" className={`nav-link ${location.pathname === '/login' ? 'active' : ''}`}>로그인</Link>
       </div>
     </header>
   );

@@ -1,0 +1,77 @@
+/* LoginPage.css */
+.login-container {
+  max-width: 400px;
+  margin: 80px auto;
+  padding: 30px;
+  text-align: center;
+  background-color: #fff;
+  border-radius: 6px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.auth-logo {
+  width: 140px;
+  margin-bottom: 20px;
+  cursor: pointer;
+}
+
+.auth-form input {
+  width: 92%;
+  margin-bottom: 12px;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.login-button {
+  width: 100%;
+  padding: 12px;
+  background: #007aff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.login-button:hover {
+  background: #005fd6;
+}
+
+.auth-links {
+  font-size: 13px;
+  color: #666;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.auth-links a {
+  text-decoration: none;
+  color: #007aff;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.auth-links a:hover {
+  color: #005fd6;
+}
+
+.text-logo {
+  font-family: 'Georgia', serif;
+  font-size: 28px;
+  font-weight: bold;
+  color: black;
+  text-decoration: none;
+  margin-bottom: 20px;
+  display: inline-block;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.text-logo:hover {
+  color: #007aff;
+}

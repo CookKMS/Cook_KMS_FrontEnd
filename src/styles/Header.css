@@ -66,3 +66,33 @@
   padding: 2px 5px;
   border-radius: 10px;
 }
+
+.nav-link {
+  margin: 0 10px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  text-decoration: none;
+  color: black;
+  transition: all 0.2s;
+}
+
+.nav-link.active {
+  background-color: black;
+  color: white;
+  font-weight: bold;
+}
+
+.nav-link {
+  margin: 0 10px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  text-decoration: none;
+  color: black;
+  transition: all 0.2s;
+}
+
+.nav-link.active {
+  background-color: black;
+  color: white;
+  font-weight: bold;
+}

@@ -1,0 +1,59 @@
+.register-container {
+  max-width: 420px;
+  margin: 60px auto;
+  padding: 30px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.text-logo {
+  font-family: 'Georgia', serif;
+  font-size: 30px;
+  font-weight: bold;
+  color: black;
+  text-decoration: none;
+  margin-bottom: 25px;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.register-form input {
+  width: 90%;
+  margin-bottom: 12px;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 15px;
+}
+
+.radio-group {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: #444;
+}
+
+.register-options {
+  font-size: 13px;
+  color: #444;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.register-button {
+  width: 100%;
+  padding: 14px;
+  background: #00c73c;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.register-button:hover {
+  background: #00a534;
+}
