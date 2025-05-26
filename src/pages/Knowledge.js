@@ -1,7 +1,7 @@
 import React from 'react';
 import Header from '../components/Header';
 
-function InquiryPage() {
+function Knowledge() {
   return (
     <>
       <Header />
@@ -13,4 +13,4 @@ function InquiryPage() {
   );
 }
 
-export default InquiryPage;
+export default Knowledge;

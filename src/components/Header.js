@@ -7,9 +7,9 @@ function Header() {
 
   const menuItems = [
     { path: '/', label: 'Home' },
-    { path: '/inquiry', label: '1:1 문의' },
+    { path: '/Knowledge', label: '지식관리' },
+    { path: '/my-inquiries', label: '제조사 문의' },
     { path: '/faq', label: 'FAQ' },
-    { path: '/my-inquiries', label: '내 문의내역' }
   ];
 
   return (
