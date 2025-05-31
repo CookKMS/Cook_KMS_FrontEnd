@@ -15,7 +15,6 @@ function Header() {
   return (
     <header className="main-header">
       <div className="left-section">
-        <div className="menu-icon">☰</div>
         <div className="logo">지식관리</div>
         <nav className="nav-menu">
           {menuItems.map(item => (
