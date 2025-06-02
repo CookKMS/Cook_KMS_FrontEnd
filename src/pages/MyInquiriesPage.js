@@ -26,9 +26,9 @@ const dummyData = [
     answerStatus: "답변 완료",
     title: "제품 A의 펌웨어 업데이트 문제",
     inquiryContent:
-      "제품 A를 최신 펌웨어 버전 2.1.4로 업데이트한 후에 작동이 되지 않습니다. 전원을 켜면 빨간 불만 들어오고 아무 반응이 없습니다.",
+      "제품 A를 최신 펌웨어 버전 2.1.4로 업데이트한 후에 작동이 되지 않습니다.",
     answerContent:
-      "안녕하세요, 고객님. 문의해 주셔서 감사합니다. 해당 문제는 펌웨어 호환성 문제로 확인되었습니다.",
+      "안녕하세요, 고객님. 해당 문제는 펌웨어 호환성 문제로 확인되었습니다.",
     date: "2023.07.15",
     answerDate: "2023.07.16 11:23",
     attachment: {
@@ -79,16 +79,15 @@ export default function MyInquiriesPage() {
     file: null,
   });
 
-  // 컴포넌트 마운트 시 데이터 로딩 (실제론 백엔드 API 호출)
+  // [TODO: Flask 연동] 전체 문의 조회 API 호출
   useEffect(() => {
     async function loadInquiries() {
       setLoading(true);
       setError(null);
       try {
-        // TODO: 백엔드 API 호출로 변경
         // const res = await fetch("/api/inquiries");
         // const data = await res.json();
-        const data = dummyData; // 현재는 더미 데이터 사용
+        const data = dummyData;
         setInquiries(data);
       } catch (e) {
         setError("데이터를 불러오는데 실패했습니다.");
@@ -118,12 +117,10 @@ export default function MyInquiriesPage() {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  // 삭제 처리 (실제론 백엔드 API 호출 필요)
+  // [TODO: Flask 연동] 문의 삭제 API 호출
   const confirmDelete = async () => {
     try {
-      // TODO: 백엔드 API 호출 DELETE 요청
       // await fetch(`/api/inquiries/${confirmDeleteId}`, { method: "DELETE" });
-
       setInquiries((prev) =>
         prev.filter((item) => item.id !== confirmDeleteId)
       );
@@ -143,7 +140,7 @@ export default function MyInquiriesPage() {
     }
   };
 
-  // 신규 문의 작성 (실제론 백엔드 API 호출 POST 요청)
+  // [TODO: Flask 연동] 문의 등록 API 호출 (multipart/form-data로 파일 포함 가능)
   const submitNewInquiry = async (e) => {
     e.preventDefault();
     if (
@@ -157,13 +154,18 @@ export default function MyInquiriesPage() {
     }
 
     try {
-      // TODO: 백엔드 API POST 요청으로 변경
-      // const response = await fetch("/api/inquiries", {
+      // const formData = new FormData();
+      // formData.append("title", newForm.title);
+      // formData.append("category", newForm.category);
+      // formData.append("customer", newForm.customer);
+      // formData.append("inquiryContent", newForm.inquiryContent);
+      // if (newForm.file) formData.append("file", newForm.file);
+
+      // const res = await fetch("/api/inquiries", {
       //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify(newForm),
+      //   body: formData,
       // });
-      // const created = await response.json();
+      // const created = await res.json();
 
       const created = {
         id: Date.now(),
@@ -173,7 +175,7 @@ export default function MyInquiriesPage() {
         title: newForm.title,
         inquiryContent: newForm.inquiryContent,
         attachment: newForm.file
-          ? { name: newForm.file.name, url: "#" }
+          ? { name: newForm.file.name, url: "#" } // [TODO: 실제 업로드된 파일 URL로 교체]
           : null,
         answerContent: "",
         date: new Date().toISOString().slice(0, 10).replace(/-/g, "."),
@@ -256,8 +258,7 @@ export default function MyInquiriesPage() {
               paged.map((item) => (
                 <article
                   key={item.id}
-                  className={`inquiry-card ${expandedId === item.id ? "expanded" : ""
-                    }`}
+                  className={`inquiry-card ${expandedId === item.id ? "expanded" : ""}`}
                   onClick={() => toggleExpand(item.id)}
                   tabIndex={0}
                   aria-expanded={expandedId === item.id}
@@ -269,9 +270,9 @@ export default function MyInquiriesPage() {
                         <span className="category-tag">{item.category}</span>
                         <span
                           className={`answer-status ${item.answerStatus === "답변 완료"
-                              ? "answered"
-                              : "pending"
-                            }`}
+                            ? "answered"
+                            : "pending"
+                          }`}
                         >
                           {item.answerStatus}
                         </span>
