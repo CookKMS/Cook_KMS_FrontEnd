@@ -1,0 +1,160 @@
+/* KnowledgeTable.css */
+.knowledge-table-wrapper {
+  background-color: #fff;
+  padding: 24px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.table-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.table-controls select,
+.table-controls input {
+  padding: 6px 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.btn-new {
+  background-color: #2563eb;
+  color: #fff;
+  font-weight: bold;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.btn-new:hover {
+  background-color: #1d4ed8;
+}
+
+.knowledge-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.knowledge-table th,
+.knowledge-table td {
+  padding: 12px;
+  text-align: left;
+  font-size: 14px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.btn-edit,
+.btn-delete {
+  border: none;
+  background: none;
+  font-size: 16px;
+  cursor: pointer;
+  margin-right: 6px;
+}
+
+.btn-delete {
+  color: red;
+}
+
+.pagination {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.pagination button {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+.pagination .active {
+  background-color: #2563eb;
+  color: white;
+  font-weight: bold;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background-color: white;
+  padding: 24px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.modal h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.modal label {
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+}
+
+.modal input,
+.modal textarea,
+.modal select {
+  margin-top: 4px;
+  padding: 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.modal-actions button {
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+.modal-actions .danger {
+  background-color: #ef4444;
+  color: white;
+}
+
+.file-preview {
+  font-size: 13px;
+  color: #555;
+}
+
+.confirm {
+  max-width: 400px;
+}
