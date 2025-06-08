@@ -42,6 +42,8 @@
   text-align: left;
   font-size: 14px;
   border-bottom: 1px solid #e5e7eb;
+  vertical-align: middle;
+  line-height: 1.4;
 }
 
 .inquiry-table th {
@@ -53,18 +55,21 @@
   font-size: 13px;
   font-weight: 500;
   border-radius: 12px;
-  display: inline-block;
+  display: inline-flex;  /* ✅ */
+  align-items: center;   /* ✅ */
+  justify-content: center; /* ✅ */
   white-space: nowrap;
 }
 
-.badge.답변\ 대기 {
-  background-color: #fef3c7;
-  color: #92400e;
+/* ✅ 상태 뱃지: 상태 텍스트와 함께 보여질 스타일 */
+.badge-done {
+  background-color: #d1fae5 !important;
+  color: #065f46 !important;
 }
 
-.badge.답변\ 완료 {
-  background-color: #d1fae5;
-  color: #065f46;
+.badge-pending {
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
 }
 
 .inquiry-table button {
@@ -84,8 +89,7 @@
 .inquiry-table button.delete {
   background-color: transparent;
   color: #ef4444;
-  font-size: 16px;
-  line-height: 1;
+  font-size: 14px;
 }
 
 .pagination {
@@ -159,10 +163,6 @@
   border-radius: 4px;
 }
 
-.modal textarea:disabled {
-  background-color: #f9fafb;
-}
-
 .modal-actions {
   display: flex;
   justify-content: flex-end;
@@ -197,4 +197,4 @@
 
 .confirm p {
   margin: 8px 0;
-} 
+}
