@@ -12,11 +12,6 @@ const categories = [
   "긴급 지원",
 ];
 
-const customer = [
-  "고객사 A",
-  "고객사 B",
-  "고객사 C",
-];
 
 // 현재는 더미 데이터. 실제 백엔드 API에서 받아올 예정
 const dummyData = [
@@ -272,7 +267,7 @@ export default function MyInquiriesPage() {
                           className={`answer-status ${item.answerStatus === "답변 완료"
                             ? "answered"
                             : "pending"
-                          }`}
+                            }`}
                         >
                           {item.answerStatus}
                         </span>
@@ -404,20 +399,16 @@ export default function MyInquiriesPage() {
                 />
 
                 <label htmlFor="customer">고객사</label>
-                <select
+                <input
+                  type="text"
                   id="customer"
                   name="customer"
                   value={newForm.customer}
                   onChange={handleNewFormChange}
                   required
-                >
-                  <option value="">고객사를 선택하세요</option>
-                  {customer.map((cust) => (
-                    <option key={cust} value={cust}>
-                      {cust}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="고객사를 입력하세요"
+                />
+
 
                 <label htmlFor="category">문의 유형</label>
                 <select
