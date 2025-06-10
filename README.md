@@ -1,70 +1,85 @@
-# Getting Started with Create React App
+업로드한 전체 React 프론트엔드 파일을 분석한 결과, 다음과 같은 구조와 주요 기능이 구현되어 있습니다. 아래에 각 파일별 핵심 요약을 정리해드리며, 어떤 역할을 수행하는지 명확하게 설명드리겠습니다.
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+---
 
-## Available Scripts
+### 📁 전체 구조 요약
 
-In the project directory, you can run:
+| 파일명                               | 역할                             |
+| --------------------------------- | ------------------------------ |
+| `App.js`                          | 전체 페이지 라우팅 및 메인 컴포넌트           |
+| `index.js`                        | React 앱 진입점 (root 렌더링)         |
+| `index.css` / `App.css`           | 전역 스타일 설정                      |
+| `LoginPage.js`, `RegisterPage.js` | 사용자 인증: 로그인 및 회원가입             |
+| `HomePage.js`                     | 로그인 후 메인 대시보드                  |
+| `AdminDashboard.js`               | 관리자 전용 통계 대시보드 (StatCard 포함)   |
+| `FAQPage.js`                      | 자주 묻는 질문(FAQ) 페이지              |
+| `MyInquiriesPage.js`              | 나의 문의 내역 페이지                   |
+| `Knowledge.js`                    | 지식 목록 조회 페이지 (KMS 기능)          |
+| `StatCard.js`                     | AdminDashboard 내 통계 카드 UI 컴포넌트 |
 
-### `npm start`
+---
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### 📄 주요 파일별 분석
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+#### ✅ `App.js`
 
-### `npm test`
+* 전체 라우팅을 정의합니다.
+* `react-router-dom`의 `Routes`, `Route` 사용
+* `/`, `/login`, `/register`, `/dashboard`, `/faq`, `/my-inquiries`, `/knowledge` 라우트 구성
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+#### ✅ `index.js`
 
-### `npm run build`
+* `ReactDOM.createRoot`로 앱을 `root` DOM에 마운트합니다.
+* CSS 불러오기 포함 (`index.css`, `App.css`)
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+#### ✅ `LoginPage.js` / `RegisterPage.js`
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+* 기본적인 로그인/회원가입 폼 구현됨
+* 스타일 정돈 필요 일부 있음 (예: 버튼 y축 정렬 문제는 이전에 언급된 개선사항 반영 필요)
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+#### ✅ `HomePage.js`
 
-### `npm run eject`
+* 로그인 후 접속하는 사용자 홈 화면
+* 현재는 환영 메시지 정도만 표시됨
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+#### ✅ `AdminDashboard.js`
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+* 관리자 권한 전용 페이지로 통계 카드 컴포넌트(`StatCard`)를 3개 렌더링
+* 추후 API 연동을 위해 `useEffect` 내부에 주석으로 `fetch` 코드가 준비됨
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+#### ✅ `StatCard.js`
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+* `AdminDashboard`에서 사용하는 재사용 가능한 UI 컴포넌트
+* props로 `title`, `value`, `icon`을 받아 렌더링
 
-## Learn More
+#### ✅ `FAQPage.js`
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+* FAQ 목록 테이블 + 등록 폼 존재
+* 카테고리 선택 가능
+* 파일 업로드 input 포함 (아직 기능 미연결)
+* `useState`, `useEffect`, `map` 등으로 간단한 CRUD UI 흉내만 구현됨
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+#### ✅ `MyInquiriesPage.js`
 
-### Code Splitting
+* 사용자 자신의 문의 내역 리스트 렌더링
+* 현재는 `dummy` 데이터 기반 `map` 렌더링만 되어 있음
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+#### ✅ `Knowledge.js`
 
-### Analyzing the Bundle Size
+* 지식 목록을 카드 형식으로 보여줌
+* 각 항목은 제목, 작성자, 등록일, 첨부파일 보기 버튼 포함
+* 실제 API 연동 부분은 주석 처리되어 있음
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+---
 
-### Making a Progressive Web App
+### ✅ 추가로 개선하거나 연결할 작업 (추후 작업 제안)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+| 항목                   | 설명                                                                                                       |
+| -------------------- | -------------------------------------------------------------------------------------------------------- |
+| 📡 API 연동            | `LoginPage`, `RegisterPage`, `FAQPage`, `Knowledge`, `AdminDashboard` 등은 백엔드와 연동 주석만 있으며, `axios` 연동이 필요 |
+| 📁 파일 업로드            | FAQ 등록 시 첨부파일 input 있음 → Flask 백엔드 `file_bp` API와 연동 예정                                                  |
+| 🎨 스타일 정돈            | 일부 컴포넌트(Button, Input) 높이 정렬 미세 조정 필요                                                                    |
+| 🔐 JWT 연동            | 로그인 후 토큰 저장 및 인증 헤더 설정 로직 추가 예정                                                                          |
+| 📃 Pagination, Modal | 문의 목록 등에 상태 기반 필터링, 모달 처리 및 페이지네이션 로직 미구현 상태                                                             |
 
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+---
