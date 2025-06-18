@@ -1,28 +1,24 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import '../../styles/auth/RegisterPage.css';
 
-
-function RegisterPage() {
+function UserRegisterPage() {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
     confirmPassword: '',
-    email: '',
-    name: '',
-    birth: '',
-    phone: '',
-    isKorean: true,
-    gender: '',
-    terms: false,
   });
 
+  const navigate = useNavigate();
+
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' ? checked : value,
-    });
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCheckDuplicate = () => {
+    // TODO: 서버에 아이디 중복 체크 요청
+    alert(`아이디 "${formData.username}" 중복 확인 요청`);
   };
 
   const handleSubmit = (e) => {
@@ -31,48 +27,58 @@ function RegisterPage() {
       alert('비밀번호가 일치하지 않습니다.');
       return;
     }
-    if (!formData.terms) {
-      alert('약관에 동의해주세요.');
-      return;
-    }
-    console.log('✅ 회원가입 정보:', formData);
+    console.log('사용자 회원가입 정보:', formData);
     // TODO: 회원가입 API 연동
+    // 성공 시: navigate('/login')
   };
 
   return (
     <div className="register-container">
-      <Link to="/" className="text-logo">지식관리</Link>
+      <div className="register-tabs">
+        <button className="active">사용자 회원가입</button>
+        <Link to="/admin-register" className="tab">관리자 회원가입</Link>
+      </div>
 
+      <h2>사용자 회원가입</h2>
       <form className="register-form" onSubmit={handleSubmit}>
-        <input type="text" name="username" placeholder="아이디" value={formData.username} onChange={handleChange} required />
-        <input type="password" name="password" placeholder="비밀번호" value={formData.password} onChange={handleChange} required />
-        <input type="password" name="confirmPassword" placeholder="비밀번호 확인" value={formData.confirmPassword} onChange={handleChange} required />
-        <input type="email" name="email" placeholder="이메일 (선택)" value={formData.email} onChange={handleChange} />
-        <input type="text" name="name" placeholder="이름" value={formData.name} onChange={handleChange} required />
-        <input type="text" name="birth" placeholder="생년월일 8자리 (예: 19990101)" value={formData.birth} onChange={handleChange} required />
-
-        <div className="radio-group">
-          <label><input type="radio" name="gender" value="male" onChange={handleChange} /> 남자</label>
-          <label><input type="radio" name="gender" value="female" onChange={handleChange} /> 여자</label>
+        <div className="input-group">
+          <input
+            type="text"
+            name="username"
+            placeholder="아이디를 입력하세요"
+            value={formData.username}
+            onChange={handleChange}
+            required
+          />
+          <button type="button" className="check-button" onClick={handleCheckDuplicate}>중복확인</button>
         </div>
 
-        <div className="radio-group">
-          <label><input type="radio" name="isKorean" value="true" checked={formData.isKorean === true || formData.isKorean === 'true'} onChange={handleChange} /> 내국인</label>
-          <label><input type="radio" name="isKorean" value="false" checked={formData.isKorean === false || formData.isKorean === 'false'} onChange={handleChange} /> 외국인</label>
-        </div>
+        <input
+          type="password"
+          name="password"
+          placeholder="비밀번호를 입력하세요"
+          value={formData.password}
+          onChange={handleChange}
+          required
+        />
 
-        <input type="text" name="phone" placeholder="휴대전화번호" value={formData.phone} onChange={handleChange} required />
+        <input
+          type="password"
+          name="confirmPassword"
+          placeholder="비밀번호를 다시 입력하세요"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          required
+        />
 
-        <div className="register-options">
-          <label>
-            <input type="checkbox" name="terms" checked={formData.terms} onChange={handleChange} /> 인증 약관 전체동의
-          </label>
-        </div>
-
-        <button type="submit" className="register-button">인증요청</button>
+        <button type="submit" className="register-button">회원가입</button>
       </form>
+
+      <div className="auth-links">
+        이미 계정이 있으신가요? <Link to="/login">로그인</Link>
+      </div>
     </div>
   );
 }
 
-export default RegisterPage;
+export default UserRegisterPage;
