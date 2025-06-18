@@ -1,11 +1,12 @@
-/* InquiryTable.css */
+/* 컨테이너 */
 .inquiry-table-wrapper {
-  background-color: #f9fafb;
+  background: #fff;
+  border-radius: 12px;
   padding: 24px;
-  border-radius: 10px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
+/* 테이블 헤더 */
 .table-header {
   display: flex;
   justify-content: space-between;
@@ -16,7 +17,6 @@
 .table-controls {
   display: flex;
   gap: 12px;
-  align-items: center;
 }
 
 .table-controls select,
@@ -24,177 +24,155 @@
   padding: 6px 10px;
   font-size: 14px;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
+/* 테이블 */
 .inquiry-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 10px;
-  background-color: white;
-  border-radius: 8px;
-  overflow: hidden;
+  font-size: 14px;
+}
+
+.inquiry-table thead {
+  background-color: #f9f9f9;
 }
 
 .inquiry-table th,
 .inquiry-table td {
-  padding: 12px;
+  padding: 12px 16px;
   text-align: left;
-  font-size: 14px;
-  border-bottom: 1px solid #e5e7eb;
   vertical-align: middle;
-  line-height: 1.4;
-}
-
-.inquiry-table th {
-  background-color: #f3f4f6;
-}
-
-.badge {
-  padding: 4px 10px;
-  font-size: 13px;
-  font-weight: 500;
-  border-radius: 12px;
-  display: inline-flex;  /* ✅ */
-  align-items: center;   /* ✅ */
-  justify-content: center; /* ✅ */
   white-space: nowrap;
 }
 
-/* ✅ 상태 뱃지: 상태 텍스트와 함께 보여질 스타일 */
+/* 상태 뱃지 */
+.badge {
+  display: inline-block;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  margin-left: -10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  vertical-align: middle;
+  line-height: 1;
+  position: relative;
+}
+
 .badge-done {
-  background-color: #d1fae5 !important;
-  color: #065f46 !important;
+  background-color: #4CAF50; /* green */
 }
 
 .badge-pending {
-  background-color: #fef3c7 !important;
-  color: #92400e !important;
+  background-color: #f0ad4e; /* orange */
 }
 
-.inquiry-table button {
-  font-size: 13px;
-  border: none;
-  padding: 6px 10px;
-  margin-right: 4px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
+/* 처리 버튼들 */
 .inquiry-table button.view {
-  background-color: #2563eb;
-  color: white;
+  background-color: #4a6cf7;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 13px;
+  margin-right: 6px;
+  vertical-align: middle;
 }
 
 .inquiry-table button.delete {
-  background-color: transparent;
-  color: #ef4444;
-  font-size: 14px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  vertical-align: middle;
+  color: #888;
 }
 
+/* 페이지네이션 */
 .pagination {
   margin-top: 16px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
+  text-align: center;
 }
 
 .pagination button {
-  padding: 6px 12px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background-color: #fff;
+  margin: 0 4px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: none;
+  background-color: #3f51b5;
+  color: white;
   cursor: pointer;
 }
 
-.pagination .active {
-  background-color: #2563eb;
-  color: white;
+.pagination button.active {
+  background-color: #5c67db;
   font-weight: bold;
 }
 
+/* 모달 공통 */
 .modal-backdrop {
   position: fixed;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.4);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   z-index: 1000;
 }
 
 .modal {
-  background-color: white;
+  background: white;
   padding: 24px;
-  border-radius: 8px;
-  width: 100%;
-  max-width: 520px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  border-radius: 12px;
+  width: 420px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .modal h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: bold;
-}
-
-.modal p {
-  font-size: 14px;
-  margin: 2px 0;
+  margin-top: 0;
 }
 
 .modal label {
-  display: flex;
-  flex-direction: column;
-  font-size: 14px;
-  gap: 4px;
+  display: block;
+  margin: 12px 0 6px;
+  font-weight: 500;
 }
 
 .modal input,
 .modal textarea,
 .modal select {
-  padding: 8px;
+  width: 100%;
+  padding: 8px 10px;
   font-size: 14px;
+  border-radius: 6px;
   border: 1px solid #ccc;
-  border-radius: 4px;
+}
+
+.modal textarea {
+  resize: vertical;
 }
 
 .modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.modal-actions button {
-  padding: 6px 12px;
-  border-radius: 4px;
-  border: none;
-  cursor: pointer;
-  font-weight: 500;
+  gap: 8px;
+  margin-top: 16px;
 }
 
 .modal-actions .danger {
-  background-color: #ef4444;
+  background: #e53935;
   color: white;
 }
 
 .file-hint {
   font-size: 12px;
-  color: #6b7280;
-  margin-top: -6px;
-  margin-bottom: 8px;
-}
-
-.confirm {
-  max-width: 420px;
-  font-size: 14px;
-}
-
-.confirm p {
-  margin: 8px 0;
+  color: #999;
+  margin-top: 4px;
 }
