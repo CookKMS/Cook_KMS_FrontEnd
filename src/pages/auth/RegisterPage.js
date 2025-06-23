@@ -35,9 +35,10 @@ function UserRegisterPage() {
   return (
     <div className="register-container">
       <div className="register-tabs">
-        <button className="active">사용자 회원가입</button>
-        <Link to="/admin-register" className="tab">관리자 회원가입</Link>
-      </div>
+       <button className="active">사용자 회원가입</button>
+       <Link to="/admin-register" className="tab">관리자 회원가입</Link>
+       <Link to="/employee-register" className="tab">사원 회원가입</Link>
+     </div>
 
       <h2>사용자 회원가입</h2>
       <form className="register-form" onSubmit={handleSubmit}>
@@ -75,7 +76,7 @@ function UserRegisterPage() {
       </form>
 
       <div className="auth-links">
-        이미 계정이 있으신가요? <Link to="/login">로그인</Link>
+        이미 계정이 있으신가요? <Link to="/login">사용자 로그인</Link>
       </div>
     </div>
   );
