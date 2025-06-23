@@ -5,24 +5,24 @@ import { Link, useNavigate } from 'react-router-dom';
 import '../../styles/auth/AdminRegisterPage.css';
 
 function AdminRegisterPage() {
-  // 🔹 입력 필드 상태 관리
+  // 🔹 관리자 회원가입 입력 필드 상태 관리
   const [formData, setFormData] = useState({
     username: '',
     password: '',
     confirmPassword: '',
-    adminKey: '',
+    adminKey: '', // 관리자 인증 키
   });
 
-  const [isChecking, setIsChecking] = useState(false); // 아이디 중복 확인 요청 상태
+  const [isChecking, setIsChecking] = useState(false); // 중복 확인 중 여부
   const navigate = useNavigate();
 
-  // 🔹 입력값 변경 시 상태 업데이트
+  // 🔹 입력값 변경 핸들러
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // 🔹 아이디 중복 확인 핸들러
+  // 🔹 아이디 중복 확인 요청 (Flask API 사용)
   const handleCheckDuplicate = async () => {
     if (!formData.username) {
       alert('아이디를 입력해주세요.');
@@ -32,7 +32,7 @@ function AdminRegisterPage() {
     try {
       setIsChecking(true);
 
-      // TODO: Flask API 연결
+      // ✅ Flask 중복 확인 API 요청
       const res = await fetch('http://localhost:5000/api/auth/check-duplicate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -54,31 +54,32 @@ function AdminRegisterPage() {
     }
   };
 
-  // 🔹 회원가입 제출 핸들러
+  // 🔹 회원가입 제출 핸들러 (백엔드 연동 포함)
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const { username, password, confirmPassword, adminKey } = formData;
 
-    // 클라이언트 유효성 검사
+    // 🔸 클라이언트 측 유효성 검사
     if (!username || !password || !confirmPassword || !adminKey) {
       alert('모든 항목을 입력해주세요.');
       return;
     }
+
     if (password !== confirmPassword) {
       alert('비밀번호가 일치하지 않습니다.');
       return;
     }
 
     try {
-      // TODO: Flask 회원가입 API 호출
+      // ✅ Flask 관리자 회원가입 API 요청
       const res = await fetch('http://localhost:5000/api/auth/admin-register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           username,
           password,
-          admin_key: adminKey,
+          admin_key: adminKey, // 백엔드에서 admin_key 필드로 받음
         }),
       });
 
@@ -88,7 +89,6 @@ function AdminRegisterPage() {
 
       alert('회원가입이 완료되었습니다. 로그인 해주세요.');
       navigate('/admin-login');
-
     } catch (error) {
       console.error('회원가입 오류:', error);
       alert('회원가입 중 오류가 발생했습니다.');
@@ -97,18 +97,17 @@ function AdminRegisterPage() {
 
   return (
     <div className="admin-register-container">
-      {/* 🔹 탭: 사용자 ↔ 관리자 전환 */}
+      {/* 🔹 회원가입 탭 전환 */}
       <div className="admin-register-tabs">
-  <Link to="/register" className="tab">사용자 회원가입</Link>
-  <button className="active">관리자 회원가입</button>
-  <Link to="/employee-register" className="tab">사원 회원가입</Link>
-</div>
-
+        <Link to="/register" className="tab">사용자 회원가입</Link>
+        <button className="active">관리자 회원가입</button>
+        <Link to="/employee-register" className="tab">사원 회원가입</Link>
+      </div>
 
       <h2>관리자 회원가입</h2>
 
+      {/* 🔹 관리자 회원가입 폼 */}
       <form className="admin-register-form" onSubmit={handleSubmit}>
-        {/* 아이디 입력 + 중복 확인 */}
         <div className="input-group">
           <input
             type="text"

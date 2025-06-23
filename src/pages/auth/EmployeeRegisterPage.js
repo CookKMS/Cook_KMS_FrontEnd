@@ -5,15 +5,15 @@ import { Link, useNavigate } from 'react-router-dom';
 import '../../styles/auth/EmployeeRegisterPage.css';
 
 function EmployeeRegisterPage() {
-  // 🔹 사원 회원가입 폼 상태 관리
+  // 🔹 사원 회원가입 입력값 상태 관리
   const [formData, setFormData] = useState({
     username: '',
     password: '',
     confirmPassword: '',
-    employeeCode: '', // 인증용 코드
+    employeeCode: '', // 사원 인증 코드
   });
 
-  const [isChecking, setIsChecking] = useState(false); // 중복확인 요청 중 여부
+  const [isChecking, setIsChecking] = useState(false); // 아이디 중복 확인 요청 중 여부
   const navigate = useNavigate();
 
   // 🔹 입력값 변경 핸들러
@@ -22,7 +22,7 @@ function EmployeeRegisterPage() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // 🔹 아이디 중복 확인 요청 (Flask 연동)
+  // 🔹 아이디 중복 확인 요청 (Flask API 사용)
   const handleCheckDuplicate = async () => {
     if (!formData.username) {
       alert('아이디를 입력해주세요.');
@@ -32,6 +32,7 @@ function EmployeeRegisterPage() {
     try {
       setIsChecking(true);
 
+      // ✅ 중복 확인 요청: POST /api/auth/check-duplicate
       const res = await fetch('http://localhost:5000/api/auth/check-duplicate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -54,13 +55,13 @@ function EmployeeRegisterPage() {
     }
   };
 
-  // 🔹 회원가입 폼 제출 시 처리 (Flask 연동)
+  // 🔹 회원가입 제출 핸들러 (Flask 연동 포함)
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const { username, password, confirmPassword, employeeCode } = formData;
 
-    // 🔸 클라이언트 유효성 검사
+    // 🔸 클라이언트 측 유효성 검사
     if (!username || !password || !confirmPassword || !employeeCode) {
       alert('모든 항목을 입력해주세요.');
       return;
@@ -72,14 +73,14 @@ function EmployeeRegisterPage() {
     }
 
     try {
-      // 🔸 Flask 사원 회원가입 API 요청
+      // ✅ 사원 회원가입 요청: POST /api/auth/employee-register
       const res = await fetch('http://localhost:5000/api/auth/employee-register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           username,
           password,
-          employee_code: employeeCode,
+          employee_code: employeeCode, // 백엔드에서 employee_code로 받음
         }),
       });
 
@@ -96,7 +97,7 @@ function EmployeeRegisterPage() {
 
   return (
     <div className="employee-register-container">
-      {/* 🔹 로그인 유형 선택 탭 */}
+      {/* 🔹 탭 전환 UI */}
       <div className="employee-register-tabs">
         <Link to="/register" className="tab">사용자 회원가입</Link>
         <Link to="/admin-register" className="tab">관리자 회원가입</Link>
@@ -105,8 +106,9 @@ function EmployeeRegisterPage() {
 
       <h2>사원 회원가입</h2>
 
+      {/* 🔹 사원 회원가입 입력 폼 */}
       <form className="employee-register-form" onSubmit={handleSubmit}>
-        {/* 🔸 아이디 + 중복 확인 */}
+        {/* 아이디 + 중복 확인 */}
         <div className="input-group">
           <input
             type="text"
@@ -158,6 +160,7 @@ function EmployeeRegisterPage() {
         </button>
       </form>
 
+      {/* 🔹 로그인 페이지 이동 링크 */}
       <div className="employee-auth-links">
         이미 계정이 있으신가요? <Link to="/employee-login">사원 로그인</Link>
       </div>

@@ -5,22 +5,22 @@ import { Link, useNavigate } from 'react-router-dom';
 import '../../styles/auth/EmployeeLoginPage.css';
 
 function EmployeeLoginPage() {
-  // 🔹 입력 필드 상태 관리
+  // 🔹 로그인 입력값 상태 관리
   const [formData, setFormData] = useState({
     username: '',
     password: '',
   });
 
-  // 🔹 페이지 이동용 navigate 객체
+  // 🔹 로그인 성공 시 페이지 이동 처리
   const navigate = useNavigate();
 
-  // 🔹 입력값 변경 시 상태 업데이트
+  // 🔹 입력 필드 변경 시 상태 업데이트
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // 🔹 로그인 버튼 클릭 시 호출되는 함수
+  // 🔹 로그인 폼 제출 핸들러
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -33,10 +33,10 @@ function EmployeeLoginPage() {
     }
 
     try {
-      // 🔸 Flask API 요청
+      // ✅ Flask 백엔드 로그인 API 요청
       const res = await fetch('http://localhost:5000/api/auth/employee-login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' }, // Flask request.json 사용 가능
         body: JSON.stringify({ username, password }),
       });
 
@@ -44,10 +44,10 @@ function EmployeeLoginPage() {
 
       const result = await res.json();
 
-      // 🔸 JWT 저장 또는 로그인 상태 처리 (선택)
+      // ✅ JWT 토큰 저장 등 추가 처리 가능
       // localStorage.setItem('employee_token', result.token);
 
-      // 🔸 사내 포털 등으로 이동
+      // ✅ 로그인 성공 시 사내 포털 또는 대시보드로 이동
       navigate('/employee-dashboard');
 
     } catch (error) {
@@ -67,7 +67,7 @@ function EmployeeLoginPage() {
 
       <h2>사원 로그인</h2>
 
-      {/* 🔹 로그인 폼 */}
+      {/* 🔹 로그인 입력 폼 */}
       <form className="employee-login-form" onSubmit={handleSubmit}>
         <label htmlFor="username">아이디</label>
         <input
@@ -96,6 +96,7 @@ function EmployeeLoginPage() {
         </button>
       </form>
 
+      {/* 🔹 회원가입 링크 */}
       <div className="employee-auth-links">
         계정이 없으신가요? <Link to="/employee-register">사원 회원가입</Link>
       </div>
