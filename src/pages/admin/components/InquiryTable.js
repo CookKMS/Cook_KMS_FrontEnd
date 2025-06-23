@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../../../styles/Admin/InquiryTable.css';
 
+// ✅ 초기 더미 데이터 (향후 백엔드 API 연동으로 대체 예정)
 const dummyInquiries = [
   {
     id: 1,
@@ -23,19 +24,40 @@ const dummyInquiries = [
 ];
 
 export default function InquiryTable() {
+  // ✅ 상태 관리: 전체 문의 목록
   const [inquiries, setInquiries] = useState([]);
-  const [filterStatus, setFilterStatus] = useState('전체');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [editingItem, setEditingItem] = useState(null);
-  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
+  // ✅ 필터 및 검색 관련 상태
+  const [filterStatus, setFilterStatus] = useState('전체'); // '전체' | '답변 대기' | '답변 완료'
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // ✅ 페이징 관련 상태
+  const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
+  // ✅ 모달 제어 상태
+  const [editingItem, setEditingItem] = useState(null);           // 수정 중인 항목
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);   // 삭제 대상 ID
+  const deletingItem = inquiries.find((i) => i.id === confirmDeleteId);
+
+  // ✅ 최초 렌더링 시 더미 데이터 로딩 (추후 Flask API 연동 예정)
   useEffect(() => {
-    setInquiries(dummyInquiries);
+    fetchInquiries();
   }, []);
 
+  // ✅ 전체 문의 조회 함수 (Flask 연동 시 GET /api/inquiries)
+  const fetchInquiries = async () => {
+    try {
+      // const res = await fetch('/api/inquiries');
+      // const data = await res.json();
+      const data = dummyInquiries; // 임시 더미 데이터
+      setInquiries(data);
+    } catch (error) {
+      console.error('문의 불러오기 실패:', error);
+    }
+  };
+
+  // ✅ 필터 및 검색 조건에 따라 데이터 필터링
   const filtered = inquiries.filter((item) => {
     const matchStatus = filterStatus === '전체' || item.status === filterStatus;
     const matchSearch =
@@ -45,11 +67,16 @@ export default function InquiryTable() {
     return matchStatus && matchSearch;
   });
 
+  // ✅ 페이지네이션 처리
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const paginated = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-  const deletingItem = inquiries.find((i) => i.id === confirmDeleteId);
+  const paginated = filtered.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
-  const handleSave = (e) => {
+  // ✅ 문의 답변 저장 (수정 또는 작성)
+  // Flask 연동 시 PUT /api/inquiries/:id
+  const handleSave = async (e) => {
     e.preventDefault();
     const form = e.target;
     const updated = {
@@ -57,19 +84,40 @@ export default function InquiryTable() {
       status: form.status.value,
       response: form.response.value,
     };
-    setInquiries((prev) =>
-      prev.map((item) => (item.id === updated.id ? updated : item))
-    );
-    setEditingItem(null);
+
+    try {
+      // await fetch(`/api/inquiries/${editingItem.id}`, {
+      //   method: 'PUT',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(updated),
+      // });
+
+      // 프론트에서 즉시 반영 (임시 처리)
+      setInquiries((prev) =>
+        prev.map((item) => (item.id === updated.id ? updated : item))
+      );
+      setEditingItem(null);
+    } catch (error) {
+      console.error('문의 수정 실패:', error);
+    }
   };
 
-  const handleDelete = () => {
-    setInquiries((prev) => prev.filter((item) => item.id !== confirmDeleteId));
-    setConfirmDeleteId(null);
+  // ✅ 문의 삭제 처리
+  // Flask 연동 시 DELETE /api/inquiries/:id
+  const handleDelete = async () => {
+    try {
+      // await fetch(`/api/inquiries/${confirmDeleteId}`, { method: 'DELETE' });
+
+      setInquiries((prev) => prev.filter((item) => item.id !== confirmDeleteId));
+      setConfirmDeleteId(null);
+    } catch (error) {
+      console.error('삭제 실패:', error);
+    }
   };
 
   return (
     <div className="inquiry-table-wrapper">
+      {/* ✅ 상단 제목 및 필터/검색 */}
       <div className="table-header">
         <h2>🛠️ 제조사 문의 관리</h2>
         <div className="table-controls">
@@ -87,6 +135,7 @@ export default function InquiryTable() {
         </div>
       </div>
 
+      {/* ✅ 문의 목록 테이블 */}
       <table className="inquiry-table">
         <thead>
           <tr>
@@ -121,6 +170,7 @@ export default function InquiryTable() {
         </tbody>
       </table>
 
+      {/* ✅ 페이지네이션 */}
       <div className="pagination">
         {Array.from({ length: totalPages }).map((_, i) => (
           <button
@@ -133,7 +183,7 @@ export default function InquiryTable() {
         ))}
       </div>
 
-      {/* 답변 모달 */}
+      {/* ✅ 답변 작성/수정 모달 */}
       {editingItem && (
         <div className="modal-backdrop" onClick={() => setEditingItem(null)}>
           <form className="modal" onClick={(e) => e.stopPropagation()} onSubmit={handleSave}>
@@ -175,7 +225,7 @@ export default function InquiryTable() {
         </div>
       )}
 
-      {/* 삭제 모달 */}
+      {/* ✅ 삭제 확인 모달 */}
       {confirmDeleteId && (
         <div className="modal-backdrop" onClick={() => setConfirmDeleteId(null)}>
           <div className="modal confirm" onClick={(e) => e.stopPropagation()}>
