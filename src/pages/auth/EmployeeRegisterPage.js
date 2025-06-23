@@ -154,7 +154,7 @@ function EmployeeRegisterPage() {
         />
 
         <button type="submit" className="employee-register-button">
-          회원가입
+          사원 회원가입
         </button>
       </form>
 
