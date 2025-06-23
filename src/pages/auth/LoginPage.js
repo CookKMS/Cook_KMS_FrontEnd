@@ -21,9 +21,10 @@ function UserLoginPage() {
   return (
     <div className="login-container">
       <div className="login-tabs">
-        <button className="active">사용자 로그인</button>
-        <Link to="/admin-login" className="tab">관리자 로그인</Link>
-      </div>
+       <button className="active">사용자 로그인</button>
+       <Link to="/admin-login" className="tab">관리자 로그인</Link>
+       <Link to="/employee-login" className="tab">사원 로그인</Link>
+     </div>
 
       <h2>사용자 로그인</h2>
       <form className="auth-form" onSubmit={handleSubmit}>
@@ -51,7 +52,7 @@ function UserLoginPage() {
       </form>
 
       <div className="auth-links">
-        계정이 없으신가요? <Link to="/register">회원가입</Link>
+        계정이 없으신가요? <Link to="/register">사용자 회원가입</Link>
       </div>
     </div>
   );
