@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
 import "../styles/MyInquiriesPage.css";
+import { inquiryData } from '../data/inquiryData';
 
 const categories = [
   "전체",
@@ -10,45 +11,6 @@ const categories = [
   "문의",
   "장애",
   "긴급 지원",
-];
-
-
-// 현재는 더미 데이터. 실제 백엔드 API에서 받아올 예정
-const dummyData = [
-  {
-    id: 1,
-    category: "수정",
-    answerStatus: "답변 완료",
-    title: "제품 A의 펌웨어 업데이트 문제",
-    inquiryContent:
-      "제품 A를 최신 펌웨어 버전 2.1.4로 업데이트한 후에 작동이 되지 않습니다.",
-    answerContent:
-      "안녕하세요, 고객님. 해당 문제는 펌웨어 호환성 문제로 확인되었습니다.",
-    date: "2023.07.15",
-    answerDate: "2023.07.16 11:23",
-    attachment: {
-      url: "https://example.com/error_photo.jpg",
-      name: "error_photo.jpg",
-    },
-  },
-  {
-    id: 2,
-    category: "긴급 지원",
-    answerStatus: "답변 대기",
-    title: "제품 B 보안 취약점 문의",
-    inquiryContent: "제품 B 보안 취약점 관련 문의 드립니다.",
-    answerContent: "",
-    date: "2023.07.10",
-  },
-  {
-    id: 3,
-    category: "문의",
-    answerStatus: "답변 완료",
-    title: "대량 구매 문의",
-    inquiryContent: "대량 구매 시 할인 문의드립니다.",
-    answerContent: "대량 구매 시 할인 혜택이 있습니다.",
-    date: "2023.07.05",
-  },
 ];
 
 export default function MyInquiriesPage() {
@@ -63,6 +25,7 @@ export default function MyInquiriesPage() {
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const inquiriesPerPage = 5;
+
   const deletingItem = inquiries.find(item => item.id === confirmDeleteId);
   const deletingTitle = deletingItem ? deletingItem.title : "";
 
@@ -74,33 +37,45 @@ export default function MyInquiriesPage() {
     file: null,
   });
 
-  // [TODO: Flask 연동] 전체 문의 조회 API 호출
-  useEffect(() => {
-    async function loadInquiries() {
-      setLoading(true);
-      setError(null);
-      try {
-        // const res = await fetch("/api/inquiries");
-        // const data = await res.json();
-        const data = dummyData;
-        setInquiries(data);
-      } catch (e) {
-        setError("데이터를 불러오는데 실패했습니다.");
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadInquiries();
-  }, []);
+  // ✅ 초기 데이터 로딩
+useEffect(() => {
+  async function loadInquiries() {
+    setLoading(true);
+    setError(null);
+    try {
+      // ✅ 관리자용 데이터를 사용자 화면용 구조로 변환
+      const mapped = inquiryData.map(item => ({
+        id: item.id,
+        title: item.subject,
+        category: '문의', // 공통 데이터에 없으므로 기본값 지정
+        customer: item.manufacturer,
+        inquiryContent: item.message,
+        answerStatus: item.status,
+        answerContent: item.response,
+        date: item.date,
+        attachment: null, // 없는 경우 null 처리
+        answerDate: item.answerDate || "", // 선택사항 처리
+      }));
 
-  const filtered = inquiries.filter((item) => {
-    const categoryMatch = filter === "전체" || item.category === filter;
-    const searchMatch =
-      item.title.includes(search) ||
-      item.inquiryContent.includes(search) ||
-      item.answerContent.includes(search);
-    return categoryMatch && searchMatch;
-  });
+      setInquiries(mapped);
+    } catch (e) {
+      setError("데이터를 불러오는데 실패했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  }
+  loadInquiries();
+}, []);
+
+const filtered = inquiries.filter((item) => {
+  const categoryMatch = filter === "전체" || item.category === filter;
+  const searchMatch =
+    (item.title || "").includes(search) ||
+    (item.inquiryContent || "").includes(search) ||
+    (item.answerContent || "").includes(search);
+  return categoryMatch && searchMatch;
+});
+
 
   const totalPages = Math.ceil(filtered.length / inquiriesPerPage);
   const paged = filtered.slice(
@@ -112,10 +87,8 @@ export default function MyInquiriesPage() {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  // [TODO: Flask 연동] 문의 삭제 API 호출
   const confirmDelete = async () => {
     try {
-      // await fetch(`/api/inquiries/${confirmDeleteId}`, { method: "DELETE" });
       setInquiries((prev) =>
         prev.filter((item) => item.id !== confirmDeleteId)
       );
@@ -135,7 +108,6 @@ export default function MyInquiriesPage() {
     }
   };
 
-  // [TODO: Flask 연동] 문의 등록 API 호출 (multipart/form-data로 파일 포함 가능)
   const submitNewInquiry = async (e) => {
     e.preventDefault();
     if (
@@ -149,19 +121,6 @@ export default function MyInquiriesPage() {
     }
 
     try {
-      // const formData = new FormData();
-      // formData.append("title", newForm.title);
-      // formData.append("category", newForm.category);
-      // formData.append("customer", newForm.customer);
-      // formData.append("inquiryContent", newForm.inquiryContent);
-      // if (newForm.file) formData.append("file", newForm.file);
-
-      // const res = await fetch("/api/inquiries", {
-      //   method: "POST",
-      //   body: formData,
-      // });
-      // const created = await res.json();
-
       const created = {
         id: Date.now(),
         category: newForm.category,
@@ -170,7 +129,7 @@ export default function MyInquiriesPage() {
         title: newForm.title,
         inquiryContent: newForm.inquiryContent,
         attachment: newForm.file
-          ? { name: newForm.file.name, url: "#" } // [TODO: 실제 업로드된 파일 URL로 교체]
+          ? { name: newForm.file.name, url: "#" }
           : null,
         answerContent: "",
         date: new Date().toISOString().slice(0, 10).replace(/-/g, "."),
@@ -204,6 +163,7 @@ export default function MyInquiriesPage() {
             <h3>제조사에 문의하고 답변을 확인할 수 있는 공간입니다</h3>
           </hgroup>
 
+          {/* 검색 및 작성 버튼 */}
           <div className="search-filter-box">
             <input
               type="text"
@@ -224,6 +184,7 @@ export default function MyInquiriesPage() {
             </button>
           </div>
 
+          {/* 카테고리 필터 */}
           <div className="filter-buttons" role="list">
             {categories.map((cat) => (
               <button
@@ -241,11 +202,13 @@ export default function MyInquiriesPage() {
             ))}
           </div>
 
+          {/* 문의 목록 헤더 */}
           <div className="inquiry-header">
             <h3>나의 문의 내역</h3>
             <span>총 {filtered.length}건의 문의</span>
           </div>
 
+          {/* 문의 목록 */}
           <div className="inquiry-list" role="list">
             {paged.length === 0 ? (
               <p>문의 내역이 없습니다.</p>
@@ -263,12 +226,7 @@ export default function MyInquiriesPage() {
                     <div className="left-group">
                       <div className="status-tags">
                         <span className="category-tag">{item.category}</span>
-                        <span
-                          className={`answer-status ${item.answerStatus === "답변 완료"
-                            ? "answered"
-                            : "pending"
-                            }`}
-                        >
+                        <span className={`answer-status ${item.answerStatus === "답변 완료" ? "answered" : "pending"}`}>
                           {item.answerStatus}
                         </span>
                       </div>
@@ -289,11 +247,9 @@ export default function MyInquiriesPage() {
                     </div>
                   </header>
 
+                  {/* 상세 내용 */}
                   {expandedId === item.id && (
-                    <section
-                      className="card-details"
-                      onClick={(e) => e.stopPropagation()}
-                    >
+                    <section className="card-details" onClick={(e) => e.stopPropagation()}>
                       <div className="inquiry-content-section">
                         <strong>문의 내용</strong>
                         <p>{item.inquiryContent}</p>
@@ -317,12 +273,12 @@ export default function MyInquiriesPage() {
                           </time>
                           <p>{item.answerContent}</p>
                         </div>
-                      ) : item.answerStatus === "답변 대기" ? (
+                      ) : (
                         <div className="pending-answer-notice">
                           <i>ℹ️</i>
                           현재 문의 내용을 검토 중입니다. 빠른 시일 내에 답변 드리겠습니다.
                         </div>
-                      ) : null}
+                      )}
                     </section>
                   )}
                 </article>
@@ -330,20 +286,13 @@ export default function MyInquiriesPage() {
             )}
           </div>
 
+          {/* 페이지네이션 */}
           {totalPages > 1 && (
-            <nav
-              className="pagination"
-              role="navigation"
-              aria-label="페이지네이션"
-            >
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                aria-label="이전 페이지"
-              >
+            <nav className="pagination" role="navigation" aria-label="페이지네이션">
+              <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
                 &lt;
               </button>
-              {[...Array(totalPages)].map((_, i) => (
+              {Array.from({ length: totalPages }).map((_, i) => (
                 <button
                   key={i}
                   className={currentPage === i + 1 ? "active" : ""}
@@ -353,38 +302,19 @@ export default function MyInquiriesPage() {
                   {i + 1}
                 </button>
               ))}
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                aria-label="다음 페이지"
-              >
+              <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
                 &gt;
               </button>
             </nav>
           )}
 
+          {/* 문의 등록 모달 */}
           {showNewModal && (
-            <div
-              className="modal-backdrop"
-              role="dialog"
-              aria-modal="true"
-              onClick={() => setShowNewModal(false)}
-            >
-              <form
-                className="modal new-inquiry-modal"
-                onClick={(e) => e.stopPropagation()}
-                onSubmit={submitNewInquiry}
-              >
+            <div className="modal-backdrop" role="dialog" aria-modal="true" onClick={() => setShowNewModal(false)}>
+              <form className="modal new-inquiry-modal" onClick={(e) => e.stopPropagation()} onSubmit={submitNewInquiry}>
                 <header>
                   <h2>새 문의 작성</h2>
-                  <button
-                    type="button"
-                    className="close-btn"
-                    aria-label="닫기"
-                    onClick={() => setShowNewModal(false)}
-                  >
-                    ×
-                  </button>
+                  <button type="button" className="close-btn" aria-label="닫기" onClick={() => setShowNewModal(false)}>×</button>
                 </header>
 
                 <label htmlFor="title">문의 제목</label>
@@ -394,21 +324,18 @@ export default function MyInquiriesPage() {
                   type="text"
                   value={newForm.title}
                   onChange={handleNewFormChange}
-                  placeholder="문의 제목을 입력하세요"
                   required
                 />
 
                 <label htmlFor="customer">고객사</label>
                 <input
-                  type="text"
                   id="customer"
                   name="customer"
+                  type="text"
                   value={newForm.customer}
                   onChange={handleNewFormChange}
                   required
-                  placeholder="고객사를 입력하세요"
                 />
-
 
                 <label htmlFor="category">문의 유형</label>
                 <select
@@ -418,14 +345,10 @@ export default function MyInquiriesPage() {
                   onChange={handleNewFormChange}
                   required
                 >
-                  <option value="">문의 유형을 선택하세요</option>
-                  {categories
-                    .filter((c) => c !== "전체")
-                    .map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
+                  <option value="">문의 유형 선택</option>
+                  {categories.filter(c => c !== "전체").map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
                 </select>
 
                 <label htmlFor="inquiryContent">문의 내용</label>
@@ -434,12 +357,11 @@ export default function MyInquiriesPage() {
                   name="inquiryContent"
                   value={newForm.inquiryContent}
                   onChange={handleNewFormChange}
-                  placeholder="문의 내용을 작성해 주세요"
                   rows={5}
                   required
                 />
 
-                <label htmlFor="fileUpload">첨부 파일 (선택 사항)</label>
+                <label htmlFor="fileUpload">첨부 파일 (선택)</label>
                 <input
                   id="fileUpload"
                   name="fileUpload"
@@ -449,54 +371,25 @@ export default function MyInquiriesPage() {
                 />
 
                 <footer className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn cancel-btn"
-                    onClick={() => setShowNewModal(false)}
-                  >
-                    취소
-                  </button>
-                  <button type="submit" className="btn submit-btn">
-                    문의 제출
-                  </button>
+                  <button type="button" className="btn cancel-btn" onClick={() => setShowNewModal(false)}>취소</button>
+                  <button type="submit" className="btn submit-btn">문의 제출</button>
                 </footer>
               </form>
             </div>
           )}
 
+          {/* 삭제 확인 모달 */}
           {confirmDeleteId !== null && (
-            <div
-              className="modal-backdrop"
-              role="dialog"
-              aria-modal="true"
-              onClick={() => setConfirmDeleteId(null)}
-            >
-              <div
-                className="modal confirm-delete-modal"
-                onClick={(e) => e.stopPropagation()}
-              >
+            <div className="modal-backdrop" role="dialog" aria-modal="true" onClick={() => setConfirmDeleteId(null)}>
+              <div className="modal confirm-delete-modal" onClick={(e) => e.stopPropagation()}>
                 <header>
                   <h2>문의 삭제</h2>
-                  <button
-                    type="button"
-                    className="close-btn"
-                    aria-label="닫기"
-                    onClick={() => setConfirmDeleteId(null)}
-                  >
-                    ×
-                  </button>
+                  <button type="button" className="close-btn" aria-label="닫기" onClick={() => setConfirmDeleteId(null)}>×</button>
                 </header>
                 <p>"{deletingTitle}" 정말로 삭제하시겠습니까?</p>
                 <footer className="modal-footer">
-                  <button
-                    className="btn cancel-btn"
-                    onClick={() => setConfirmDeleteId(null)}
-                  >
-                    취소
-                  </button>
-                  <button className="btn delete-btn" onClick={confirmDelete}>
-                    삭제
-                  </button>
+                  <button className="btn cancel-btn" onClick={() => setConfirmDeleteId(null)}>취소</button>
+                  <button className="btn delete-btn" onClick={confirmDelete}>삭제</button>
                 </footer>
               </div>
             </div>
