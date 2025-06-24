@@ -103,6 +103,7 @@ export default function InquiryTable() {
       <table className="inquiry-table">
         <thead>
           <tr>
+            <th>카테고리</th>
             <th>고객사</th>
             <th>제목</th>
             <th>상태</th>
@@ -113,6 +114,7 @@ export default function InquiryTable() {
         <tbody>
           {paginated.map((item) => (
             <tr key={item.id}>
+              <td>{item.category}</td>
               <td>{item.manufacturer}</td>
               <td>{item.subject}</td>
               <td>
@@ -150,6 +152,7 @@ export default function InquiryTable() {
         <div className="modal-backdrop" onClick={() => setEditingItem(null)}>
           <form className="modal" onClick={(e) => e.stopPropagation()} onSubmit={handleSave}>
             <h3>문의 답변 수정</h3>
+            <p>카테고리: <strong>{editingItem.category}</strong></p>
             <p>고객사: <strong>{editingItem.manufacturer}</strong></p>
             <p>제목: <strong>{editingItem.subject}</strong></p>
             <p>문의 내용: {editingItem.message}</p>
