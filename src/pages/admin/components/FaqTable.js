@@ -1,5 +1,3 @@
-// src/pages/Admin/components/FaqTable.js
-
 import React, { useState } from 'react';
 import '../../../styles/Admin/FaqTable.css';
 import { faqData } from '../../../data/faqData'; // ✅ 개발 초기 더미 데이터
@@ -104,14 +102,8 @@ export default function FaqTable() {
               <td>{faq.question}</td>
               <td>{faq.category}</td>
               <td>
-                <button
-                  className="icon-btn"
-                  onClick={() => { setModalType('edit'); setCurrentFaq(faq); }}
-                >✏️</button>
-                <button
-                  className="icon-btn"
-                  onClick={() => { setModalType('delete'); setCurrentFaq(faq); }}
-                >🗑️</button>
+                <button className="icon-btn" onClick={() => { setModalType('edit'); setCurrentFaq(faq); }}>✏️</button>
+                <button className="icon-btn" onClick={() => { setModalType('delete'); setCurrentFaq(faq); }}>🗑️</button>
               </td>
             </tr>
           ))}
@@ -121,11 +113,7 @@ export default function FaqTable() {
       {/* 🔹 페이지네이션 */}
       <div className="pagination">
         {Array.from({ length: totalPages }).map((_, i) => (
-          <button
-            key={i}
-            className={currentPage === i + 1 ? 'active' : ''}
-            onClick={() => setCurrentPage(i + 1)}
-          >
+          <button key={i} className={currentPage === i + 1 ? 'active' : ''} onClick={() => setCurrentPage(i + 1)}>
             {i + 1}
           </button>
         ))}
@@ -137,29 +125,45 @@ export default function FaqTable() {
           <form className="modal" onClick={(e) => e.stopPropagation()} onSubmit={handleSave}>
             <h3>{modalType === 'add' ? '새 FAQ 추가' : 'FAQ 수정'}</h3>
 
-            <label>
-              제목
-              <input name="question" defaultValue={currentFaq?.question || ''} required />
-            </label>
-            <label>
-              내용
-              <textarea name="answer" defaultValue={currentFaq?.answer || ''} required />
-            </label>
-            <label>
-              카테고리
-              <select name="category" defaultValue={currentFaq?.category || ''} required>
-                <option value="">카테고리 선택</option>
-                {categories.slice(1).map(c => <option key={c}>{c}</option>)}
-              </select>
-            </label>
-            <label>
-              첨부 파일 (선택사항)
-              <input type="file" accept=".pdf,.jpg,.jpeg" onChange={(e) => setFile(e.target.files[0])} />
-            </label>
+            <div className="modal-row">
+              <label>제목</label>
+              <div className="input-area">
+                <input name="question" defaultValue={currentFaq?.question || ''} placeholder="FAQ 제목을 입력하세요" required />
+              </div>
+            </div>
+
+            <div className="modal-row">
+              <label>내용</label>
+              <div className="input-area">
+                <textarea name="answer" defaultValue={currentFaq?.answer || ''} placeholder="FAQ 내용을 입력하세요" required />
+              </div>
+            </div>
+
+            <div className="modal-row">
+              <label>카테고리</label>
+              <div className="input-area">
+                <select name="category" defaultValue={currentFaq?.category || ''} required>
+                  <option value="">카테고리 선택</option>
+                  {categories.slice(1).map(c => <option key={c}>{c}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="modal-row">
+              <label>첨부 파일</label>
+              <div className="input-area">
+                <input type="file" accept=".pdf,.jpg,.jpeg" onChange={(e) => setFile(e.target.files[0])} />
+                {currentFaq?.file && (
+                  <div className="file-preview">
+                    첨부 파일: {currentFaq.file}
+                  </div>
+                )}
+              </div>
+            </div>
 
             <div className="modal-actions">
-              <button type="button" onClick={() => setModalType(null)}>취소</button>
-              <button type="submit">저장</button>
+              <button type="button" className="cancel" onClick={() => setModalType(null)}>취소</button>
+              <button type="submit" className="primary">저장</button>
             </div>
           </form>
         </div>
@@ -172,7 +176,7 @@ export default function FaqTable() {
             <h3>삭제 확인</h3>
             <p>정말로 <strong>"{currentFaq.question}"</strong> FAQ를 삭제하시겠습니까?</p>
             <div className="modal-actions">
-              <button onClick={() => setModalType(null)}>취소</button>
+              <button className="cancel" onClick={() => setModalType(null)}>취소</button>
               <button className="danger" onClick={handleDelete}>삭제</button>
             </div>
           </div>
