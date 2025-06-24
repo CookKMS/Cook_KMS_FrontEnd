@@ -15,17 +15,17 @@ const categories = ['전체', '새 기능', '수정', '버그', '문의', '장�
 
 export default function KnowledgeTable() {
   // ✅ 상태 관리
-  const [data, setData] = useState([]); // 지식 목록 데이터
-  const [filter, setFilter] = useState('전체'); // 카테고리 필터
-  const [search, setSearch] = useState('');     // 검색어
-  const [currentPage, setCurrentPage] = useState(1); // 페이지네이션
-  const [showModal, setShowModal] = useState(false); // 등록/수정 모달
-  const [editingItem, setEditingItem] = useState(null); // 수정 대상 항목
-  const [confirmDeleteId, setConfirmDeleteId] = useState(null); // 삭제 확인 대상
+  const [data, setData] = useState([]);
+  const [filter, setFilter] = useState('전체');
+  const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showModal, setShowModal] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   const itemsPerPage = 5;
 
-  // ✅ 초기 데이터 로딩 (백엔드 연동 시 GET /api/knowledge)
+  // ✅ 초기 데이터 로딩
   useEffect(() => {
     setData(knowledgeData); // TODO: 실제 API 데이터로 교체
   }, []);
@@ -55,7 +55,6 @@ export default function KnowledgeTable() {
   };
 
   // ✅ 저장 처리 (등록/수정)
-  // 등록 시 POST /api/knowledge, 수정 시 PUT /api/knowledge/:id
   const handleSave = async (e) => {
     e.preventDefault();
     const form = e.target;
@@ -69,13 +68,7 @@ export default function KnowledgeTable() {
       if (editingItem) {
         // ✅ [PUT] 수정
         // const formData = new FormData();
-        // formData.append('title', title);
-        // formData.append('category', category);
-        // formData.append('content', content);
-        // if (file) formData.append('file', file);
-        // await axios.put(`/api/knowledge/${editingItem.id}`, formData);
-
-        // 프론트 상태 업데이트
+        // ...
         setData((prev) =>
           prev.map((item) =>
             item.id === editingItem.id
@@ -85,14 +78,6 @@ export default function KnowledgeTable() {
         );
       } else {
         // ✅ [POST] 신규 등록
-        // const formData = new FormData();
-        // formData.append('title', title);
-        // formData.append('category', category);
-        // formData.append('content', content);
-        // if (file) formData.append('file', file);
-        // const res = await axios.post('/api/knowledge', formData);
-        // const newItem = res.data;
-
         const newItem = {
           id: Date.now(),
           title,
@@ -180,40 +165,80 @@ export default function KnowledgeTable() {
           <form className="modal" onClick={(e) => e.stopPropagation()} onSubmit={handleSave}>
             <h3>{editingItem ? '지식 문서 수정' : '새 지식 문서 추가'}</h3>
 
-            <label>
-              제목
-              <input name="title" defaultValue={editingItem?.title || ''} required placeholder="문서 제목을 입력하세요" />
-            </label>
-
-            <label>
-              카테고리
-              <select name="category" defaultValue={editingItem?.category || ''} required>
-                <option value="">카테고리 선택</option>
-                {categories.filter(c => c !== '전체').map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-            </label>
-
-            <label>
-              내용
-              <textarea name="content" defaultValue={editingItem?.content || ''} placeholder="문서 내용을 상세히 입력하세요" />
-            </label>
-
-            <label>
-              첨부 파일
-              <input type="file" name="file" accept=".pdf,.jpg,.jpeg" />
-            </label>
-            {editingItem?.file && (
-              <div className="file-preview">
-                첨부 파일: {editingItem.file}
-                <button type="button" onClick={() => setEditingItem({ ...editingItem, file: '' })}>× 제거</button>
+            <div className="modal-row">
+              <label htmlFor="title">제목</label>
+              <div className="input-area">
+                <input
+                  name="title"
+                  id="title"
+                  defaultValue={editingItem?.title || ''}
+                  placeholder="문서 제목을 입력하세요"
+                  required
+                />
               </div>
-            )}
+            </div>
+
+            <div className="modal-row">
+              <label htmlFor="category">카테고리</label>
+              <div className="input-area">
+                <select
+                  name="category"
+                  id="category"
+                  defaultValue={editingItem?.category || ''}
+                  required
+                >
+                  <option value="">카테고리 선택</option>
+                  {categories.filter(c => c !== '전체').map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="modal-row">
+              <label htmlFor="content">내용</label>
+              <div className="input-area">
+                <textarea
+                  name="content"
+                  id="content"
+                  rows={5}
+                  defaultValue={editingItem?.content || ''}
+                  placeholder="문서 내용을 상세히 입력하세요"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="modal-row">
+              <label htmlFor="file">첨부 파일</label>
+              <div className="input-area">
+                <input type="file" name="file" id="file" accept=".pdf,.jpg,.jpeg" />
+                {editingItem?.file && (
+                  <div className="file-preview">
+                    📎 {editingItem.file}
+                    <button
+                      type="button"
+                      onClick={() => setEditingItem({ ...editingItem, file: '' })}
+                      style={{
+                        marginLeft: '10px',
+                        background: 'none',
+                        border: 'none',
+                        color: '#2563eb',
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      제거
+                    </button>
+                  </div>
+                )}
+                <p className="file-hint">PDF, JPG 파일만 첨부 가능 • 최대 5MB 이하</p>
+              </div>
+            </div>
 
             <div className="modal-actions">
-              <button type="button" onClick={() => { setShowModal(false); setEditingItem(null); }}>취소</button>
-              <button type="submit">저장</button>
+              <button type="button" className="cancel" onClick={() => { setShowModal(false); setEditingItem(null); }}>취소</button>
+              <button type="submit" className="primary">저장</button>
             </div>
           </form>
         </div>
