@@ -1,30 +1,24 @@
+// src/pages/Admin/components/InquiryTable.js
+
 import React, { useState, useEffect } from 'react';
 import '../../../styles/Admin/InquiryTable.css';
 import { inquiryData } from '../../../data/inquiryData';
 
 export default function InquiryTable() {
-  // ✅ 상태 관리: 전체 문의 목록
   const [inquiries, setInquiries] = useState([]);
-
-  // ✅ 필터 및 검색 관련 상태
   const [filterStatus, setFilterStatus] = useState('전체');
   const [searchTerm, setSearchTerm] = useState('');
-
-  // ✅ 페이징 상태
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  // ✅ 모달 제어 상태
   const [editingItem, setEditingItem] = useState(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const deletingItem = inquiries.find((i) => i.id === confirmDeleteId);
 
-  // ✅ 최초 렌더링 시 공통 데이터 불러오기
   useEffect(() => {
     setInquiries(inquiryData);
   }, []);
 
-  // ✅ 필터 + 검색 적용
   const filtered = inquiries.filter((item) => {
     const matchStatus = filterStatus === '전체' || item.status === filterStatus;
     const matchSearch =
@@ -34,14 +28,12 @@ export default function InquiryTable() {
     return matchStatus && matchSearch;
   });
 
-  // ✅ 페이지네이션 처리
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const paginated = filtered.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // ✅ 문의 답변 저장 (Flask 연동 시 PUT /api/inquiries/:id)
   const handleSave = async (e) => {
     e.preventDefault();
     const form = e.target;
@@ -52,12 +44,6 @@ export default function InquiryTable() {
     };
 
     try {
-      // await fetch(`/api/inquiries/${editingItem.id}`, {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(updated),
-      // });
-
       setInquiries((prev) =>
         prev.map((item) => (item.id === updated.id ? updated : item))
       );
@@ -67,11 +53,8 @@ export default function InquiryTable() {
     }
   };
 
-  // ✅ 문의 삭제 처리 (Flask 연동 시 DELETE /api/inquiries/:id)
   const handleDelete = async () => {
     try {
-      // await fetch(`/api/inquiries/${confirmDeleteId}`, { method: 'DELETE' });
-
       setInquiries((prev) => prev.filter((item) => item.id !== confirmDeleteId));
       setConfirmDeleteId(null);
     } catch (error) {
@@ -81,7 +64,6 @@ export default function InquiryTable() {
 
   return (
     <div className="inquiry-table-wrapper">
-      {/* 상단 필터/검색 */}
       <div className="table-header">
         <h2>🛠️ 제조사 문의 관리</h2>
         <div className="table-controls">
@@ -99,7 +81,6 @@ export default function InquiryTable() {
         </div>
       </div>
 
-      {/* 문의 목록 테이블 */}
       <table className="inquiry-table">
         <thead>
           <tr>
@@ -134,7 +115,6 @@ export default function InquiryTable() {
         </tbody>
       </table>
 
-      {/* 페이지네이션 */}
       <div className="pagination">
         {Array.from({ length: totalPages }).map((_, i) => (
           <button
@@ -147,40 +127,47 @@ export default function InquiryTable() {
         ))}
       </div>
 
-      {/* 답변 수정 모달 */}
+      {/* ✅ 수정 모달 (2열 레이아웃 적용) */}
       {editingItem && (
         <div className="modal-backdrop" onClick={() => setEditingItem(null)}>
           <form className="modal" onClick={(e) => e.stopPropagation()} onSubmit={handleSave}>
             <h3>문의 답변 수정</h3>
-            <p>카테고리: <strong>{editingItem.category}</strong></p>
-            <p>고객사: <strong>{editingItem.manufacturer}</strong></p>
-            <p>제목: <strong>{editingItem.subject}</strong></p>
-            <p>문의 내용: {editingItem.message}</p>
 
-            <label>
-              상태
-              <select name="status" defaultValue={editingItem.status}>
-                <option value="답변 대기">답변 대기</option>
-                <option value="답변 완료">답변 완료</option>
-              </select>
-            </label>
+            <div className="modal-row"><label>카테고리</label><div className="input-area">{editingItem.category}</div></div>
+            <div className="modal-row"><label>고객사</label><div className="input-area">{editingItem.manufacturer}</div></div>
+            <div className="modal-row"><label>제목</label><div className="input-area"><strong>{editingItem.subject}</strong></div></div>
+            <div className="modal-row"><label>문의 내용</label><div className="input-area">{editingItem.message}</div></div>
 
-            <label>
-              답변 내용
-              <textarea
-                name="response"
-                defaultValue={editingItem.response}
-                rows={5}
-                placeholder="답변 내용을 입력하세요"
-                required
-              />
-            </label>
+            <div className="modal-row">
+              <label htmlFor="status">상태</label>
+              <div className="input-area">
+                <select name="status" defaultValue={editingItem.status}>
+                  <option value="답변 대기">답변 대기</option>
+                  <option value="답변 완료">답변 완료</option>
+                </select>
+              </div>
+            </div>
 
-            <label>
-              첨부 파일 (선택사항)
-              <input type="file" name="file" accept=".pdf,.jpg,.jpeg" />
-            </label>
-            <p className="file-hint">PDF, JPG 파일만 업로드 가능 (최대 5MB)</p>
+            <div className="modal-row">
+              <label htmlFor="response">답변 내용</label>
+              <div className="input-area">
+                <textarea
+                  name="response"
+                  defaultValue={editingItem.response}
+                  placeholder="답변 내용을 입력하세요"
+                  rows={5}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="modal-row">
+              <label htmlFor="file">첨부 파일</label>
+              <div className="input-area">
+                <input type="file" name="file" accept=".pdf,.jpg,.jpeg" />
+                <p className="file-hint">PDF, JPG 파일만 업로드 가능 (최대 5MB)</p>
+              </div>
+            </div>
 
             <div className="modal-actions">
               <button type="button" onClick={() => setEditingItem(null)}>취소</button>
@@ -190,7 +177,6 @@ export default function InquiryTable() {
         </div>
       )}
 
-      {/* 삭제 확인 모달 */}
       {confirmDeleteId && (
         <div className="modal-backdrop" onClick={() => setConfirmDeleteId(null)}>
           <div className="modal confirm" onClick={(e) => e.stopPropagation()}>
