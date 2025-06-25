@@ -8,7 +8,6 @@ function Header() {
   // ✅ 메뉴 항목 정의 (path, label)
   const menuItems = [
     { path: '/', label: 'Home' },
-    { path: '/Knowledge', label: '지식관리' },
     { path: '/my-inquiries', label: '제조사 문의' },
     { path: '/faq', label: 'FAQ' },
     { path: '/mypage', label: 'MyPage' }, // ✅ 사용자 전용 마이페이지
