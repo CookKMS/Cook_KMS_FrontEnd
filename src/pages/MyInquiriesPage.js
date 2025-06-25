@@ -4,51 +4,16 @@ import "../styles/MyInquiriesPage.css";
 
 const categories = ["전체", "새 기능", "수정", "버그", "문의", "장애", "긴급 지원"];
 
-const dummyData = [
-  {
-    id: 1,
-    category: "문의",
-    customer: "A전자",
-    answerStatus: "답변 대기",
-    title: "로그인이 되지 않습니다.",
-    inquiryContent: "아이디/비밀번호가 맞는데 로그인에 실패합니다.",
-    answerContent: "",
-    date: "2023. 8. 01.",
-  },
-  {
-    id: 2,
-    category: "새 기능",
-    customer: "B테크",
-    answerStatus: "답변 완료",
-    title: "신규 기능 요청",
-    inquiryContent: "",
-    answerContent: "요청하신 기능은 다음 업데이트에 반영 예정입니다.",
-    date: "2023. 8. 02.",
-  },
-  {
-    id: 3,
-    category: "문의",
-    customer: "C시스템즈",
-    answerStatus: "답변 완료",
-    title: "이중 로그인 차단 문의",
-    inquiryContent: "",
-    answerContent: "설정에서 차단 기능을 활성화해주세요.",
-    date: "2023. 8. 03.",
-  },
-];
-
 export default function MyInquiriesPage() {
   const [inquiries, setInquiries] = useState([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("전체");
+  const [currentPage, setCurrentPage] = useState(1);
+  const inquiriesPerPage = 5;
   const [expandedId, setExpandedId] = useState(null);
   const [showNewModal, setShowNewModal] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const inquiriesPerPage = 5;
-
   const deletingItem = inquiries.find(item => item.id === confirmDeleteId);
-  const deletingTitle = deletingItem ? deletingItem.title : "";
 
   const [newForm, setNewForm] = useState({
     title: "",
@@ -58,8 +23,120 @@ export default function MyInquiriesPage() {
     file: null,
   });
 
+  // ✅ 초기 더미 데이터 (Flask 연동 시 GET /api/inquiries 로 대체)
   useEffect(() => {
-    // [TODO: Flask 연동 시 교체]
+    const dummyData = [
+      {
+        id: 1,
+        title: "로그인 실패",
+        category: "문의",
+        customer: "A전자",
+        inquiryContent: "아이디와 비밀번호가 맞는데 로그인되지 않습니다.",
+        answerContent: "",
+        answerStatus: "답변 대기",
+        date: "2023.08.01",
+      },
+      {
+        id: 2,
+        title: "신규 기능 요청",
+        category: "새 기능",
+        customer: "B테크",
+        inquiryContent: "검색 필터에 '날짜 범위' 조건도 추가해주세요.",
+        answerContent: "다음 배포 일정에 반영하겠습니다.",
+        answerStatus: "답변 완료",
+        date: "2023.08.02",
+      },
+      {
+        id: 3,
+        title: "버그 리포트 - 중복 등록",
+        category: "버그",
+        customer: "C시스템즈",
+        inquiryContent: "문의 등록 시 동일 항목이 두 번 생성됩니다.",
+        answerContent: "",
+        answerStatus: "답변 대기",
+        date: "2023.08.03",
+      },
+      {
+        id: 4,
+        title: "접속 차단 오류",
+        category: "장애",
+        customer: "D네트웍스",
+        inquiryContent: "사내 방화벽으로 인해 외부 접속이 안 됩니다.",
+        answerContent: "방화벽 예외 처리를 요청해 주세요.",
+        answerStatus: "답변 완료",
+        date: "2023.08.04",
+      },
+      {
+        id: 5,
+        title: "긴급 패치 요청",
+        category: "긴급 지원",
+        customer: "E솔루션",
+        inquiryContent: "보안 취약점이 발견되어 긴급 대응이 필요합니다.",
+        answerContent: "즉시 엔지니어가 대응 예정입니다.",
+        answerStatus: "답변 완료",
+        date: "2023.08.05",
+      },
+      {
+        id: 6,
+        title: "수정 요청 - 관리자 페이지 UI",
+        category: "수정",
+        customer: "F랩",
+        inquiryContent: "관리자 페이지 버튼 위치가 어색합니다.",
+        answerContent: "",
+        answerStatus: "답변 대기",
+        date: "2023.08.06",
+      },
+      {
+        id: 7,
+        title: "모바일 뷰 대응 문의",
+        category: "문의",
+        customer: "G테크",
+        inquiryContent: "모바일에서 화면이 깨져 보입니다.",
+        answerContent: "반응형 업데이트 예정입니다.",
+        answerStatus: "답변 완료",
+        date: "2023.08.07",
+      },
+      {
+        id: 8,
+        title: "다운로드 기능 실패",
+        category: "버그",
+        customer: "H전자",
+        inquiryContent: "파일 다운로드 시 오류가 발생합니다.",
+        answerContent: "",
+        answerStatus: "답변 대기",
+        date: "2023.08.08",
+      },
+      {
+        id: 9,
+        title: "로그 이력 확인 요청",
+        category: "문의",
+        customer: "I네트",
+        inquiryContent: "특정 사용자의 접속 기록을 확인하고 싶습니다.",
+        answerContent: "관리자 페이지에서 확인 가능합니다.",
+        answerStatus: "답변 완료",
+        date: "2023.08.09",
+      },
+      {
+        id: 10,
+        title: "권한 관리 오류",
+        category: "장애",
+        customer: "J소프트",
+        inquiryContent: "사내 계정이 권한 없이 모든 메뉴에 접근됩니다.",
+        answerContent: "패치 버전이 오늘 중 배포됩니다.",
+        answerStatus: "답변 완료",
+        date: "2023.08.10",
+      },
+      {
+        id: 11,
+        title: "권한 관리 오류11",
+        category: "장애",
+        customer: "K소프트",
+        inquiryContent: "사내 계정이 권한 없이 모든 메뉴에 접근됩니다.",
+        answerContent: "패치 버전이 오늘 중 배포됩니다.",
+        answerStatus: "답변 완료",
+        date: "2023.08.10",
+      },
+    ];
     setInquiries(dummyData);
   }, []);
 
@@ -68,7 +145,7 @@ export default function MyInquiriesPage() {
     const searchMatch =
       item.title.includes(search) ||
       item.inquiryContent.includes(search) ||
-      item.answerContent.includes(search);
+      item.answerContent.includes(search || "");
     return categoryMatch && searchMatch;
   });
 
@@ -82,12 +159,6 @@ export default function MyInquiriesPage() {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const confirmDelete = async () => {
-    setInquiries(prev => prev.filter(item => item.id !== confirmDeleteId));
-    setConfirmDeleteId(null);
-    if (expandedId === confirmDeleteId) setExpandedId(null);
-  };
-
   const handleNewFormChange = (e) => {
     const { name, value, files } = e.target;
     if (name === "fileUpload") {
@@ -99,27 +170,35 @@ export default function MyInquiriesPage() {
 
   const submitNewInquiry = async (e) => {
     e.preventDefault();
-    if (!newForm.title || !newForm.category || !newForm.inquiryContent || !newForm.customer) {
+
+    const { title, category, customer, inquiryContent, file } = newForm;
+    if (!title || !category || !customer || !inquiryContent) {
       alert("모든 필드를 입력해주세요.");
       return;
     }
 
     const created = {
       id: Date.now(),
-      category: newForm.category,
-      customer: newForm.customer,
-      answerStatus: "답변 대기",
-      title: newForm.title,
-      inquiryContent: newForm.inquiryContent,
+      title,
+      category,
+      customer,
+      inquiryContent,
       answerContent: "",
+      answerStatus: "답변 대기",
       date: new Date().toISOString().slice(0, 10).replace(/-/g, "."),
-      attachment: newForm.file ? { name: newForm.file.name, url: "#" } : null,
+      attachment: file ? { name: file.name, url: "#" } : null,
     };
 
     setInquiries(prev => [created, ...prev]);
     setShowNewModal(false);
     setNewForm({ title: "", category: "", customer: "", inquiryContent: "", file: null });
     setCurrentPage(1);
+  };
+
+  const confirmDelete = async () => {
+    setInquiries(prev => prev.filter(item => item.id !== confirmDeleteId));
+    setConfirmDeleteId(null);
+    if (expandedId === confirmDeleteId) setExpandedId(null);
   };
 
   return (
@@ -143,11 +222,7 @@ export default function MyInquiriesPage() {
               }}
               aria-label="키워드 검색"
             />
-            <button
-              className="btn"
-              onClick={() => setShowNewModal(true)}
-              aria-label="문의 작성"
-            >
+            <button className="btn" onClick={() => setShowNewModal(true)}>
               + 문의 작성
             </button>
           </div>
@@ -162,7 +237,6 @@ export default function MyInquiriesPage() {
                   setCurrentPage(1);
                 }}
                 type="button"
-                role="listitem"
               >
                 {cat}
               </button>
@@ -181,8 +255,6 @@ export default function MyInquiriesPage() {
                 className={`inquiry-card ${expandedId === item.id ? "expanded" : ""}`}
                 onClick={() => toggleExpand(item.id)}
                 tabIndex={0}
-                aria-expanded={expandedId === item.id}
-                role="button"
               >
                 <header className="card-header">
                   <div className="left-group">
@@ -196,7 +268,7 @@ export default function MyInquiriesPage() {
                   </div>
                   <div className="right-group">
                     <time dateTime={item.date}>{item.date}</time>
-                    <div className="customer-name">{item.customer}</div> {/* 👈 고객사 표시 */}
+                    <div className="customer-name">{item.customer}</div>
                     <button
                       className="btn-delete"
                       aria-label="문의 삭제"
@@ -215,6 +287,11 @@ export default function MyInquiriesPage() {
                     <div className="inquiry-content-section">
                       <strong>문의 내용</strong>
                       <p>{item.inquiryContent}</p>
+                      {item.attachment && (
+                        <a href={item.attachment.url} target="_blank" rel="noreferrer" className="attachment-link">
+                          📎 {item.attachment.name}
+                        </a>
+                      )}
                       <time className="content-date">{item.date}</time>
                     </div>
                     {item.answerContent ? (
@@ -225,8 +302,7 @@ export default function MyInquiriesPage() {
                       </div>
                     ) : (
                       <div className="pending-answer-notice">
-                        <i>ℹ️</i>
-                        현재 문의 내용을 검토 중입니다. 빠른 시일 내에 답변 드리겠습니다.
+                        <i>ℹ️</i> 현재 문의 내용을 검토 중입니다. 빠른 시일 내에 답변 드리겠습니다.
                       </div>
                     )}
                   </section>
@@ -235,56 +311,25 @@ export default function MyInquiriesPage() {
             ))}
           </div>
 
-          {showNewModal && (
-            <div className="modal-backdrop" role="dialog" aria-modal="true" onClick={() => setShowNewModal(false)}>
-              <form className="modal new-inquiry-modal" onClick={(e) => e.stopPropagation()} onSubmit={submitNewInquiry}>
-                <header>
-                  <h2>새 문의 작성</h2>
-                  <button type="button" className="close-btn" onClick={() => setShowNewModal(false)}>×</button>
-                </header>
-
-                <label htmlFor="title">문의 제목</label>
-                <input id="title" name="title" type="text" value={newForm.title} onChange={handleNewFormChange} required />
-
-                <label htmlFor="customer">고객사</label>
-                <input id="customer" name="customer" type="text" value={newForm.customer} onChange={handleNewFormChange} required />
-
-                <label htmlFor="category">문의 유형</label>
-                <select id="category" name="category" value={newForm.category} onChange={handleNewFormChange} required>
-                  <option value="">문의 유형을 선택하세요</option>
-                  {categories.filter(c => c !== "전체").map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-
-                <label htmlFor="inquiryContent">문의 내용</label>
-                <textarea id="inquiryContent" name="inquiryContent" value={newForm.inquiryContent} onChange={handleNewFormChange} rows={5} required />
-
-                <label htmlFor="fileUpload">첨부 파일 (선택)</label>
-                <input id="fileUpload" name="fileUpload" type="file" accept=".jpg,.jpeg,.pdf" onChange={handleNewFormChange} />
-
-                <footer className="modal-footer">
-                  <button type="button" className="btn cancel-btn" onClick={() => setShowNewModal(false)}>취소</button>
-                  <button type="submit" className="btn submit-btn">문의 제출</button>
-                </footer>
-              </form>
-            </div>
-          )}
-
-          {confirmDeleteId && (
-            <div className="modal-backdrop" onClick={() => setConfirmDeleteId(null)}>
-              <div className="modal confirm-delete-modal" onClick={(e) => e.stopPropagation()}>
-                <header>
-                  <h2>문의 삭제</h2>
-                  <button type="button" className="close-btn" onClick={() => setConfirmDeleteId(null)}>×</button>
-                </header>
-                <p>"{deletingTitle}" 정말로 삭제하시겠습니까?</p>
-                <footer className="modal-footer">
-                  <button className="btn cancel-btn" onClick={() => setConfirmDeleteId(null)}>취소</button>
-                  <button className="btn delete-btn" onClick={confirmDelete}>삭제</button>
-                </footer>
-              </div>
-            </div>
+          {/* ✅ 페이지네이션 */}
+          {totalPages > 1 && (
+            <nav className="pagination" role="navigation" aria-label="페이지네이션">
+              <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
+                &lt;
+              </button>
+              {Array.from({ length: totalPages }).map((_, i) => (
+                <button
+                  key={i}
+                  className={currentPage === i + 1 ? "active" : ""}
+                  onClick={() => setCurrentPage(i + 1)}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
+                &gt;
+              </button>
+            </nav>
           )}
         </section>
       </main>
