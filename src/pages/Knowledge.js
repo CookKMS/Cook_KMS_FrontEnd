@@ -1,21 +1,22 @@
+// src/pages/Knowledge.js
+
 import React, { useState } from 'react';
 import Header from '../components/Header';
 import KnowledgeDetailModal from '../components/KnowledgeDetailModal';
 import '../styles/Knowledge.css';
 import { knowledgeData } from '../data/knowledgeData'; // ✅ 외부에서 데이터 import
 
-// ✅ 필터용 카테고리 목록
 const categories = ['전체', '새 기능', '수정', '버그', '문의', '장애', '긴급 지원'];
 
 function Knowledge() {
-  const [searchTerm, setSearchTerm] = useState('');           // 검색어 입력 상태
-  const [selectedCategory, setSelectedCategory] = useState('전체'); // 선택된 카테고리
-  const [currentPage, setCurrentPage] = useState(1);          // 현재 페이지
-  const [selectedItem, setSelectedItem] = useState(null);     // 모달로 볼 항목
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('전체');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [showNewModal, setShowNewModal] = useState(false);
 
   const itemsPerPage = 6;
 
-  // ✅ 검색 + 카테고리 필터링 처리
   const filtered = knowledgeData.filter(item => {
     const matchCategory = selectedCategory === '전체' || item.category === selectedCategory;
     const matchSearch =
@@ -34,8 +35,8 @@ function Knowledge() {
         <h2>지식 관리 시스템</h2>
         <p>팀에서 공유하는 지식과 정보를 한 곳에서 관리하세요</p>
 
-        {/* ✅ 검색창 */}
-        <div className="knowledge-search">
+        {/* ✅ 검색창 + 문서 추가 버튼 */}
+        <div className="knowledge-search" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <input
             type="text"
             placeholder="검색어를 입력하세요"
@@ -46,6 +47,21 @@ function Knowledge() {
             }}
             onKeyDown={(e) => e.key === 'Enter' && setCurrentPage(1)}
           />
+          <button
+            className="btn"
+            style={{
+              backgroundColor: '#007acc',
+              color: '#fff',
+              padding: '0.6rem 1rem',
+              border: 'none',
+              borderRadius: '6px',
+              fontWeight: '600',
+              cursor: 'pointer',
+            }}
+            onClick={() => setShowNewModal(true)}
+          >
+            + 문서 추가
+          </button>
         </div>
 
         {/* ✅ 카테고리 필터 */}
@@ -99,9 +115,87 @@ function Knowledge() {
           </div>
         )}
 
-        {/* ✅ 상세 모달 */}
+        {/* ✅ 상세 보기 모달 */}
         {selectedItem && (
           <KnowledgeDetailModal item={selectedItem} onClose={() => setSelectedItem(null)} />
+        )}
+
+        {/* ✅ MyInquiries 스타일의 문서 등록 모달 */}
+        {showNewModal && (
+          <div
+            className="modal-backdrop"
+            role="dialog"
+            aria-modal="true"
+            onClick={() => setShowNewModal(false)}
+          >
+            <form
+              className="modal new-inquiry-modal"
+              onClick={(e) => e.stopPropagation()}
+              onSubmit={(e) => {
+                e.preventDefault();
+                alert('📡 [TODO] Flask API 연동 필요: POST /api/knowledge');
+                setShowNewModal(false);
+              }}
+            >
+              <header>
+                <h2>지식 문서 추가</h2>
+                <button
+                  type="button"
+                  className="close-btn"
+                  aria-label="닫기"
+                  onClick={() => setShowNewModal(false)}
+                >
+                  ×
+                </button>
+              </header>
+
+              <label htmlFor="title">문서 제목</label>
+              <input
+                id="title"
+                name="title"
+                type="text"
+                placeholder="문서 제목을 입력하세요"
+                required
+              />
+
+              <label htmlFor="category">카테고리</label>
+              <select id="category" name="category" required>
+                <option value="">카테고리를 선택하세요</option>
+                {categories.filter(c => c !== '전체').map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+
+              <label htmlFor="summary">요약 설명</label>
+              <textarea
+                id="summary"
+                name="summary"
+                rows="4"
+                placeholder="문서 내용을 간략히 요약해주세요"
+              />
+
+              <label htmlFor="fileUpload">첨부 파일 (선택)</label>
+              <input
+                id="fileUpload"
+                name="fileUpload"
+                type="file"
+                accept=".pdf,.jpg,.jpeg"
+              />
+
+              <footer className="modal-footer">
+                <button
+                  type="button"
+                  className="btn cancel-btn"
+                  onClick={() => setShowNewModal(false)}
+                >
+                  취소
+                </button>
+                <button type="submit" className="btn submit-btn">
+                  등록
+                </button>
+              </footer>
+            </form>
+          </div>
         )}
       </main>
     </>
