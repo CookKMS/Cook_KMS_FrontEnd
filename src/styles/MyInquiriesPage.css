@@ -7,6 +7,12 @@
   color: #222;
 }
 
+.customer-name {
+  font-size: 0.8rem;
+  color: #555;
+  margin-top: 2px;
+}
+
 section > hgroup h2 {
   font-size: 2rem;
   margin-bottom: 0.25rem;
