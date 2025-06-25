@@ -20,7 +20,7 @@ import EmployeeLoginPage from './pages/auth/EmployeeLoginPage';
 import EmployeeRegisterPage from './pages/auth/EmployeeRegisterPage';
 
 // ✅ 사원 전용 페이지들 (추가된 부분)
-import MyEmployeePage from './pages/employee/MyEmployeePage';
+import EmployeeInquiriesPage from './pages/employee/EmployeeInquiriesPage';
 import EmployeeKnowledgePage from './pages/employee/EmployeeKnowledgePage';
 import EmployeeFaqPage from './pages/employee/EmployeeFaqPage'
 import EmployeeHome from './pages/employee/EmployeeHome'
@@ -45,7 +45,7 @@ function App() {
         {/* 사원 포털 페이지 ✅ */}
         <Route path="/employee-login" element={<EmployeeLoginPage />} />
         <Route path="/employee-register" element={<EmployeeRegisterPage />} />
-        <Route path="/employee-mypage" element={<MyEmployeePage />} />
+        <Route path="/employee-Inquiry" element={<EmployeeInquiriesPage />} />
         <Route path="/employee-knowledge" element={<EmployeeKnowledgePage />} />
         <Route path="/employee-faq" element={<EmployeeFaqPage />} />
         <Route path="/employee-Home" element={<EmployeeHome />} />

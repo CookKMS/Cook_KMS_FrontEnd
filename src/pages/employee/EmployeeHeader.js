@@ -10,8 +10,9 @@ function EmployeeHeader() {
   const menuItems = [
     { path: '/employee-Home', label: 'Home' },
     { path: '/employee-knowledge', label: '지식관리' },
-    { path: '/employee-mypage', label: '제조사 문의' },
+    { path: '/employee-Inquiry', label: '제조사 문의' },
     { path: '/employee-faq', label: 'FAQ' },
+    { path: '/employee-mypage', label: 'Mypage' },
   ];
 
   return (
