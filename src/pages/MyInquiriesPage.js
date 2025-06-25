@@ -1,31 +1,22 @@
+// src/pages/MyInquiriesPage.js
+
 import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
 import "../styles/MyInquiriesPage.css";
-
-// ✅ [현재는 개발 중 더미 데이터 사용 중, 실제 연동 시 주석 처리 가능]
 import { inquiryData as dummyData } from "../data/inquiryData";
 
-// 문의 카테고리 목록
 const categories = ["전체", "새 기능", "수정", "버그", "문의", "장애", "긴급 지원"];
 
 export default function MyInquiriesPage() {
-  // 🔹 문의 목록 상태
   const [inquiries, setInquiries] = useState([]);
-
-  // 🔹 카드 확장 상태
   const [expandedId, setExpandedId] = useState(null);
-
-  // 🔹 작성 모달 / 삭제 모달 상태
   const [showNewModal, setShowNewModal] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
-
-  // 🔹 검색/필터/페이지
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("전체");
   const [currentPage, setCurrentPage] = useState(1);
   const inquiriesPerPage = 5;
 
-  // 🔹 새 문의 작성 상태
   const [newForm, setNewForm] = useState({
     title: "",
     category: "",
@@ -34,25 +25,15 @@ export default function MyInquiriesPage() {
     file: null,
   });
 
-  // ✅ [Flask 연동] 문의 목록 불러오기 - GET /api/inquiries
   useEffect(() => {
-    // 실제 연동 시 이 부분을 사용
-    /*
-    fetch("/api/inquiries")
-      .then(res => res.json())
-      .then(data => setInquiries(data));
-    */
-
-    // 지금은 더미 데이터 사용
-    setInquiries(dummyData);
+    setInquiries(dummyData); // 실제 API 연동 시 이 부분 교체
   }, []);
 
-  // 🔍 검색 + 필터 적용된 문의 리스트
   const filtered = inquiries.filter(item => {
     const matchCategory = filter === "전체" || item.category === filter;
     const matchKeyword =
-      item.title.includes(search) ||
-      item.inquiryContent.includes(search) ||
+      (item.title || "").includes(search) ||
+      (item.inquiryContent || "").includes(search) ||
       (item.answerContent || "").includes(search);
     return matchCategory && matchKeyword;
   });
@@ -63,12 +44,10 @@ export default function MyInquiriesPage() {
     currentPage * inquiriesPerPage
   );
 
-  // 📌 카드 펼치기 토글
   const toggleExpand = (id) => {
     setExpandedId(prev => (prev === id ? null : id));
   };
 
-  // 🔧 새 문의 작성 시 입력 처리
   const handleNewFormChange = (e) => {
     const { name, value, files } = e.target;
     if (name === "fileUpload") {
@@ -78,7 +57,6 @@ export default function MyInquiriesPage() {
     }
   };
 
-  // ✅ [Flask 연동] POST /api/inquiries
   const submitNewInquiry = async (e) => {
     e.preventDefault();
     const { title, category, customer, inquiryContent, file } = newForm;
@@ -88,60 +66,27 @@ export default function MyInquiriesPage() {
       return;
     }
 
-    try {
-      // 🔽 실제 Flask 서버와 연동 시 FormData로 전송
-      /*
-      const formData = new FormData();
-      formData.append("title", title);
-      formData.append("category", category);
-      formData.append("customer", customer);
-      formData.append("inquiryContent", inquiryContent);
-      if (file) formData.append("file", file);
+    const newItem = {
+      id: Date.now(),
+      title,
+      category,
+      customer,
+      inquiryContent,
+      answerContent: "",
+      answerStatus: "답변 대기",
+      date: new Date().toISOString().slice(0, 10).replace(/-/g, "."),
+      attachment: file ? { name: file.name, url: "#" } : null,
+    };
 
-      await fetch("/api/inquiries", {
-        method: "POST",
-        body: formData
-      });
-
-      const newItemFromServer = await res.json();
-      setInquiries(prev => [newItemFromServer, ...prev]);
-      */
-
-      // 🔧 지금은 더미 방식으로 추가
-      const newItem = {
-        id: Date.now(),
-        title,
-        category,
-        customer,
-        inquiryContent,
-        answerContent: "",
-        answerStatus: "답변 대기",
-        date: new Date().toISOString().slice(0, 10).replace(/-/g, "."),
-        attachment: file ? { name: file.name, url: "#" } : null,
-      };
-
-      setInquiries(prev => [newItem, ...prev]);
-      setShowNewModal(false);
-      setNewForm({ title: "", category: "", customer: "", inquiryContent: "", file: null });
-      setCurrentPage(1);
-    } catch (err) {
-      console.error("등록 실패:", err);
-      alert("문의 등록 중 오류 발생");
-    }
+    setInquiries(prev => [newItem, ...prev]);
+    setShowNewModal(false);
+    setNewForm({ title: "", category: "", customer: "", inquiryContent: "", file: null });
+    setCurrentPage(1);
   };
 
-  // ✅ [Flask 연동] DELETE /api/inquiries/:id
-  const handleDelete = async (id) => {
-    try {
-      /*
-      await fetch(`/api/inquiries/${id}`, { method: "DELETE" });
-      */
-      setInquiries(prev => prev.filter(q => q.id !== id));
-      setConfirmDeleteId(null);
-    } catch (err) {
-      console.error("삭제 실패:", err);
-      alert("삭제 중 오류 발생");
-    }
+  const handleDelete = (id) => {
+    setInquiries(prev => prev.filter(q => q.id !== id));
+    setConfirmDeleteId(null);
   };
 
   return (
@@ -154,7 +99,7 @@ export default function MyInquiriesPage() {
             <h3>제조사에 문의하고 답변을 확인할 수 있는 공간입니다</h3>
           </hgroup>
 
-          {/* 🔍 검색 + 작성 버튼 */}
+          {/* 검색 + 작성 */}
           <div className="search-filter-box">
             <input
               type="text"
@@ -170,7 +115,7 @@ export default function MyInquiriesPage() {
             </button>
           </div>
 
-          {/* 🔘 카테고리 필터 */}
+          {/* 카테고리 필터 */}
           <div className="filter-buttons">
             {categories.map((cat) => (
               <button
@@ -186,7 +131,7 @@ export default function MyInquiriesPage() {
             ))}
           </div>
 
-          {/* 📋 문의 목록 */}
+          {/* 문의 목록 */}
           <div className="inquiry-header">
             <h3>나의 문의 내역</h3>
             <span>총 {filtered.length}건</span>
@@ -238,12 +183,12 @@ export default function MyInquiriesPage() {
                     </div>
                     {item.answerContent ? (
                       <div className="answer-section">
-                        <strong>제조사 답변</strong>
+                        <strong>답변</strong>
                         <p>{item.answerContent}</p>
                       </div>
                     ) : (
                       <div className="pending-answer-notice">
-                        <i>ℹ️</i> 현재 문의 내용을 검토 중입니다.
+                        답변을 기다리는 중입니다.
                       </div>
                     )}
                   </section>
@@ -312,7 +257,7 @@ export default function MyInquiriesPage() {
         </div>
       )}
 
-      {/* 삭제 확인 모달 */}
+      {/* 삭제 모달 */}
       {confirmDeleteId && (
         <div className="modal-backdrop" onClick={() => setConfirmDeleteId(null)}>
           <div className="modal confirm" onClick={(e) => e.stopPropagation()}>
