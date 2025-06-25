@@ -24,6 +24,7 @@ import EmployeeInquiriesPage from './pages/employee/EmployeeInquiriesPage';
 import EmployeeKnowledgePage from './pages/employee/EmployeeKnowledgePage';
 import EmployeeFaqPage from './pages/employee/EmployeeFaqPage'
 import EmployeeHome from './pages/employee/EmployeeHome'
+import MyEmployeePage from './pages/employee/MyEmployeePage';
 function App() {
   return (
     <Router>
@@ -49,6 +50,7 @@ function App() {
         <Route path="/employee-knowledge" element={<EmployeeKnowledgePage />} />
         <Route path="/employee-faq" element={<EmployeeFaqPage />} />
         <Route path="/employee-Home" element={<EmployeeHome />} />
+        <Route path="/employee-mypage" element={<MyEmployeePage />} />
 
         
       </Routes>
