@@ -4,6 +4,7 @@ import HomePage from './pages/HomePage';
 import Knowledge from './pages/Knowledge';
 import FAQPage from './pages/FAQPage';
 import MyInquiriesPage from './pages/MyInquiriesPage';
+import MyPage from './pages/MyPage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import AdminLoginPage from './pages/auth/AdminLoginPage';
@@ -22,6 +23,7 @@ function App() {
         <Route path="/Knowledge" element={<Knowledge />} />
         <Route path="/faq" element={<FAQPage />} />
         <Route path="/my-inquiries" element={<MyInquiriesPage />} />
+        <Route path="/mypage" element={<MyPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/admin-login" element={<AdminLoginPage />} />
