@@ -1,8 +1,12 @@
-// src/pages/Admin/components/InquiryTable.js
-
 import React, { useState, useEffect } from 'react';
+import axios from '../../../utils/axiosInstance';
 import '../../../styles/Admin/InquiryTable.css';
-import { inquiryData } from '../../../data/inquiryData';
+
+const STATUS_MAP = {
+  '전체': null,
+  '답변 대기': '01',
+  '답변 완료': '02',
+};
 
 export default function InquiryTable() {
   const [inquiries, setInquiries] = useState([]);
@@ -15,50 +19,75 @@ export default function InquiryTable() {
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const deletingItem = inquiries.find((i) => i.id === confirmDeleteId);
 
+  const fetchInquiries = async () => {
+    try {
+      const params = {};
+      if (STATUS_MAP[filterStatus]) params.status = STATUS_MAP[filterStatus];
+      if (searchTerm) params.keyword = searchTerm;
+
+      const res = await axios.get('/admin/dashboard/inquiry', { params });
+      setInquiries(res.data.data);
+    } catch (err) {
+      console.error('문의 목록 불러오기 실패:', err);
+    }
+  };
+
   useEffect(() => {
-    setInquiries(inquiryData);
-  }, []);
+    fetchInquiries();
+  }, [filterStatus]);
 
-  const filtered = inquiries.filter((item) => {
-    const matchStatus = filterStatus === '전체' || item.status === filterStatus;
-    const matchSearch =
-      item.manufacturer.includes(searchTerm) ||
-      item.subject.includes(searchTerm) ||
-      item.message.includes(searchTerm);
-    return matchStatus && matchSearch;
-  });
-
+  const filtered = inquiries; // 서버에서 필터링 처리
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const paginated = filtered.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const paginated = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const handleSave = async (e) => {
     e.preventDefault();
     const form = e.target;
-    const updated = {
-      ...editingItem,
-      status: form.status.value,
-      response: form.response.value,
-    };
+    const status = form.status.value;
+    const content = form.response.value;
+    const file = form.file.files[0];
 
     try {
-      setInquiries((prev) =>
-        prev.map((item) => (item.id === updated.id ? updated : item))
-      );
+      if (editingItem.comments?.length > 0) {
+        // 수정은 DELETE 후 다시 등록하는 방식 또는 PUT 사용 시 구현 필요
+        await axios.delete(`/inquiry/comment/${editingItem.comments[0].comment_id}`);
+      }
+
+      if (file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        await axios.post('/file/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      }
+
+      await axios.post(`/inquiry/${editingItem.id}/comment`, { content });
+
+      await axios.put(`/my/inquiries/${editingItem.id}`, {
+        title: editingItem.title,
+        content: editingItem.content,
+        category: editingItem.category,
+        status,
+      });
+
+      alert('답변 저장 완료');
       setEditingItem(null);
-    } catch (error) {
-      console.error('문의 수정 실패:', error);
+      fetchInquiries();
+    } catch (err) {
+      console.error('답변 저장 실패:', err);
+      alert('저장 중 오류가 발생했습니다.');
     }
   };
 
   const handleDelete = async () => {
     try {
-      setInquiries((prev) => prev.filter((item) => item.id !== confirmDeleteId));
+      await axios.delete(`/inquiry/${confirmDeleteId}`);
+      alert('삭제되었습니다.');
       setConfirmDeleteId(null);
-    } catch (error) {
-      console.error('삭제 실패:', error);
+      fetchInquiries();
+    } catch (err) {
+      console.error('삭제 실패:', err);
+      alert('삭제 중 오류 발생');
     }
   };
 
@@ -78,6 +107,7 @@ export default function InquiryTable() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+          <button onClick={fetchInquiries}>🔍 검색</button>
         </div>
       </div>
 
@@ -96,17 +126,17 @@ export default function InquiryTable() {
           {paginated.map((item) => (
             <tr key={item.id}>
               <td>{item.category}</td>
-              <td>{item.manufacturer}</td>
-              <td>{item.subject}</td>
+              <td>{item.user_id}</td>
+              <td>{item.title}</td>
               <td>
-                <span className={`badge ${item.status === '답변 완료' ? 'badge-done' : 'badge-pending'}`}>
-                  {item.status}
+                <span className={`badge ${item.status === '02' ? 'badge-done' : 'badge-pending'}`}>
+                  {item.status === '02' ? '답변 완료' : '답변 대기'}
                 </span>
               </td>
-              <td>{item.date}</td>
+              <td>{item.created_at?.slice(0, 10)}</td>
               <td>
                 <button className="view" onClick={() => setEditingItem(item)}>
-                  {item.status === '답변 완료' ? '답변 보기' : '답변 작성'}
+                  {item.status === '02' ? '답변 보기' : '답변 작성'}
                 </button>
                 <button className="delete" onClick={() => setConfirmDeleteId(item.id)}>🗑️</button>
               </td>
@@ -127,23 +157,22 @@ export default function InquiryTable() {
         ))}
       </div>
 
-      {/* ✅ 수정 모달 (2열 레이아웃 적용) */}
       {editingItem && (
         <div className="modal-backdrop" onClick={() => setEditingItem(null)}>
           <form className="modal" onClick={(e) => e.stopPropagation()} onSubmit={handleSave}>
             <h3>문의 답변 수정</h3>
 
             <div className="modal-row"><label>카테고리</label><div className="input-area">{editingItem.category}</div></div>
-            <div className="modal-row"><label>고객사</label><div className="input-area">{editingItem.manufacturer}</div></div>
-            <div className="modal-row"><label>제목</label><div className="input-area"><strong>{editingItem.subject}</strong></div></div>
-            <div className="modal-row"><label>문의 내용</label><div className="input-area">{editingItem.message}</div></div>
+            <div className="modal-row"><label>고객사</label><div className="input-area">{editingItem.user_id}</div></div>
+            <div className="modal-row"><label>제목</label><div className="input-area"><strong>{editingItem.title}</strong></div></div>
+            <div className="modal-row"><label>문의 내용</label><div className="input-area">{editingItem.content}</div></div>
 
             <div className="modal-row">
               <label htmlFor="status">상태</label>
               <div className="input-area">
                 <select name="status" defaultValue={editingItem.status}>
-                  <option value="답변 대기">답변 대기</option>
-                  <option value="답변 완료">답변 완료</option>
+                  <option value="01">답변 대기</option>
+                  <option value="02">답변 완료</option>
                 </select>
               </div>
             </div>
@@ -153,7 +182,7 @@ export default function InquiryTable() {
               <div className="input-area">
                 <textarea
                   name="response"
-                  defaultValue={editingItem.response}
+                  defaultValue={editingItem.comments?.[0]?.content || ''}
                   placeholder="답변 내용을 입력하세요"
                   rows={5}
                   required
@@ -181,7 +210,7 @@ export default function InquiryTable() {
         <div className="modal-backdrop" onClick={() => setConfirmDeleteId(null)}>
           <div className="modal confirm" onClick={(e) => e.stopPropagation()}>
             <h3>삭제 확인</h3>
-            <p>정말로 <strong>"{deletingItem?.subject}"</strong> 문의를 삭제하시겠습니까?</p>
+            <p>정말로 <strong>{deletingItem?.title}</strong> 문의를 삭제하시겠습니까?</p>
             <div className="modal-actions">
               <button onClick={() => setConfirmDeleteId(null)}>취소</button>
               <button className="danger" onClick={handleDelete}>삭제</button>

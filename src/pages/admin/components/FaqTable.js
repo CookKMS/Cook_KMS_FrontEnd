@@ -1,71 +1,104 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from '../../../utils/axiosInstance';
 import '../../../styles/Admin/FaqTable.css';
-import { faqData } from '../../../data/faqData'; // ✅ 개발 초기 더미 데이터
 
-// ✅ FAQ 카테고리는 공통 코드 테이블로 대체 가능 (예: code_type='faq_category')
 const categories = ['전체', '설치,구성', '접근통제', '계정관리', '기타'];
+const categoryCodeMap = {
+  '설치,구성': 'SETUP',
+  '접근통제': 'SECURITY',
+  '계정관리': 'ACCOUNT',
+  '기타': 'ETC'
+};
 
 export default function FaqTable() {
-  // 🔹 FAQ 목록 상태
-  const [faqs, setFaqs] = useState(faqData); // ✅ 백엔드 연동 시 API 데이터로 교체
+  const [faqs, setFaqs] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  // 🔹 필터 및 검색 상태
   const [filter, setFilter] = useState('전체');
   const [searchTerm, setSearchTerm] = useState('');
-
-  // 🔹 모달 상태
   const [modalType, setModalType] = useState(null); // 'add' | 'edit' | 'delete'
   const [currentFaq, setCurrentFaq] = useState(null);
-  const [file, setFile] = useState(null); // 첨부파일
+  const [file, setFile] = useState(null);
 
-  // 🔹 필터링 & 검색 처리
-  const filteredFaqs = faqs.filter(faq => {
-    const matchCategory = filter === '전체' || faq.category === filter;
-    const matchSearch =
-      faq.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      faq.answer.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchCategory && matchSearch;
-  });
+  // ✅ FAQ 목록 불러오기
+  const fetchFaqs = async () => {
+    try {
+      let url = '/faq';
+      if (filter !== '전체') {
+        const code = categoryCodeMap[filter];
+        url = `/faq/category/${code}`;
+      }
+      const res = await axios.get(url);
+      setFaqs(res.data);
+    } catch (err) {
+      console.error('FAQ 목록 불러오기 실패:', err);
+    }
+  };
 
-  // 🔹 페이지네이션 처리
+  useEffect(() => {
+    fetchFaqs();
+  }, [filter]);
+
+  const filteredFaqs = faqs.filter(faq =>
+    faq.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    faq.content.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const totalPages = Math.ceil(filteredFaqs.length / itemsPerPage);
   const paginatedFaqs = filteredFaqs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  // ✅ 등록 or 수정 저장 처리
-  // Flask 연동 시 POST /api/faqs, PUT /api/faqs/:id
-  const handleSave = (e) => {
+  // ✅ 등록 or 수정
+  const handleSave = async (e) => {
     e.preventDefault();
     const form = e.target;
 
     const newFaq = {
-      id: modalType === 'add' ? Date.now() : currentFaq.id,
-      question: form.question.value,
-      answer: form.answer.value,
-      category: form.category.value,
-      file: file ? file.name : currentFaq?.file || '',
+      title: form.question.value,
+      content: form.answer.value,
+      category: categoryCodeMap[form.category.value] || form.category.value
     };
 
-    if (modalType === 'add') {
-      setFaqs([newFaq, ...faqs]);
-    } else {
-      setFaqs(faqs.map(f => f.id === newFaq.id ? newFaq : f));
-    }
+    try {
+      if (file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        await axios.post('/file/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      }
 
-    setModalType(null);
-    setFile(null);
+      if (modalType === 'add') {
+        await axios.post('/faq/create', newFaq);
+      } else {
+        await axios.put(`/faq/${currentFaq.id}`, newFaq);
+      }
+
+      alert('저장되었습니다.');
+      setModalType(null);
+      setFile(null);
+      fetchFaqs();
+    } catch (err) {
+      alert('저장 중 오류 발생');
+      console.error(err);
+    }
   };
 
-  // ✅ 삭제 처리 (DELETE /api/faqs/:id)
-  const handleDelete = () => {
-    setFaqs(faqs.filter(f => f.id !== currentFaq.id));
-    setModalType(null);
+  // ✅ 삭제
+  const handleDelete = async () => {
+    try {
+      await axios.delete(`/faq/${currentFaq.id}`);
+      alert('삭제되었습니다.');
+      setModalType(null);
+      fetchFaqs();
+    } catch (err) {
+      alert('삭제 실패');
+      console.error(err);
+    }
   };
 
   return (
     <div className="faq-table-wrapper">
-      {/* 🔹 상단 필터/검색/추가 */}
       <div className="table-header">
         <h2>FAQ 관리</h2>
         <div className="filter-section">
@@ -87,7 +120,6 @@ export default function FaqTable() {
         </div>
       </div>
 
-      {/* 🔹 FAQ 테이블 목록 */}
       <table className="faq-table">
         <thead>
           <tr>
@@ -99,7 +131,7 @@ export default function FaqTable() {
         <tbody>
           {paginatedFaqs.map(faq => (
             <tr key={faq.id}>
-              <td>{faq.question}</td>
+              <td>{faq.title}</td>
               <td>{faq.category}</td>
               <td>
                 <button className="icon-btn" onClick={() => { setModalType('edit'); setCurrentFaq(faq); }}>✏️</button>
@@ -110,7 +142,6 @@ export default function FaqTable() {
         </tbody>
       </table>
 
-      {/* 🔹 페이지네이션 */}
       <div className="pagination">
         {Array.from({ length: totalPages }).map((_, i) => (
           <button key={i} className={currentPage === i + 1 ? 'active' : ''} onClick={() => setCurrentPage(i + 1)}>
@@ -119,7 +150,6 @@ export default function FaqTable() {
         ))}
       </div>
 
-      {/* 🔹 등록 / 수정 모달 */}
       {(modalType === 'add' || modalType === 'edit') && (
         <div className="modal-backdrop" onClick={() => setModalType(null)}>
           <form className="modal" onClick={(e) => e.stopPropagation()} onSubmit={handleSave}>
@@ -128,14 +158,14 @@ export default function FaqTable() {
             <div className="modal-row">
               <label>제목</label>
               <div className="input-area">
-                <input name="question" defaultValue={currentFaq?.question || ''} placeholder="FAQ 제목을 입력하세요" required />
+                <input name="question" defaultValue={currentFaq?.title || ''} required />
               </div>
             </div>
 
             <div className="modal-row">
               <label>내용</label>
               <div className="input-area">
-                <textarea name="answer" defaultValue={currentFaq?.answer || ''} placeholder="FAQ 내용을 입력하세요" required />
+                <textarea name="answer" defaultValue={currentFaq?.content || ''} required />
               </div>
             </div>
 
@@ -153,11 +183,6 @@ export default function FaqTable() {
               <label>첨부 파일</label>
               <div className="input-area">
                 <input type="file" accept=".pdf,.jpg,.jpeg" onChange={(e) => setFile(e.target.files[0])} />
-                {currentFaq?.file && (
-                  <div className="file-preview">
-                    첨부 파일: {currentFaq.file}
-                  </div>
-                )}
               </div>
             </div>
 
@@ -169,12 +194,11 @@ export default function FaqTable() {
         </div>
       )}
 
-      {/* 🔹 삭제 확인 모달 */}
       {modalType === 'delete' && (
         <div className="modal-backdrop" onClick={() => setModalType(null)}>
           <div className="modal confirm" onClick={(e) => e.stopPropagation()}>
             <h3>삭제 확인</h3>
-            <p>정말로 <strong>"{currentFaq.question}"</strong> FAQ를 삭제하시겠습니까?</p>
+            <p>정말로 <strong>{currentFaq.title}</strong> FAQ를 삭제하시겠습니까?</p>
             <div className="modal-actions">
               <button className="cancel" onClick={() => setModalType(null)}>취소</button>
               <button className="danger" onClick={handleDelete}>삭제</button>

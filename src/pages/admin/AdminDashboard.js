@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import axios from '../../utils/axiosInstance';
 import AdminHeader from '../../components/AdminHeader';
 import StatCard from './components/StatCard';
 import KnowledgeTable from './components/KnowledgeTable';
@@ -6,13 +7,8 @@ import InquiryTable from './components/InquiryTable';
 import FaqTable from './components/FaqTable';
 import '../../styles/Admin/AdminDashboard.css';
 
-// ✅ 관리자용 대시보드
-// - 통계 카드 (StatCard)
-// - 지식 문서 / 문의 / FAQ 테이블 관리
-// - 추후 Flask 백엔드와 연결 예정
-
 export default function AdminDashboard() {
-  // ✅ 통계 카드 데이터 상태 (추후 /api/dashboard/stats 등과 연결)
+  // ✅ 실시간 통계 데이터 상태
   const [stats, setStats] = useState({
     knowledgeCount: 0,
     knowledgeChange: 0,
@@ -22,38 +18,34 @@ export default function AdminDashboard() {
     faqChange: 0,
   });
 
-  // ✅ 초기 통계 데이터 로딩
+  // ✅ 백엔드에서 통계 정보 불러오기
   useEffect(() => {
-    fetchDashboardStats();
+    const fetchStats = async () => {
+      try {
+        const res = await axios.get('/admin/dashboard');
+        const data = res.data;
+        setStats({
+          knowledgeCount: data.knowledge_total,
+          knowledgeChange: 12, // 예시 변화율
+          inquiryPending: data.inquiry_unanswered,
+          inquiryChange: -5,   // 예시 변화율
+          faqCount: data.faq_total,
+          faqChange: 3,        // 예시 변화율
+        });
+      } catch (error) {
+        console.error('대시보드 통계 불러오기 실패:', error);
+      }
+    };
+
+    fetchStats();
   }, []);
-
-  // ✅ 통계 데이터 로딩 함수 (Flask 연동 시 /api/dashboard/stats)
-  const fetchDashboardStats = async () => {
-    try {
-      // const res = await fetch('/api/dashboard/stats');
-      // const json = await res.json();
-      // setStats(json);
-
-      // 더미 데이터 (개발용)
-      setStats({
-        knowledgeCount: 124,
-        knowledgeChange: 12,
-        inquiryPending: 8,
-        inquiryChange: -5,
-        faqCount: 42,
-        faqChange: 3,
-      });
-    } catch (error) {
-      console.error('대시보드 통계 불러오기 실패:', error);
-    }
-  };
 
   return (
     <>
       <AdminHeader />
 
       <main className="admin-dashboard-container">
-        {/* ✅ 상단 통계 카드 영역 */}
+        {/* ✅ 통계 카드 섹션 */}
         <section className="stat-cards-section">
           <StatCard
             title="총 지식 문서"
