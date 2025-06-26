@@ -1,22 +1,22 @@
-// src/pages/employee/MyEmployeePage.js
+// src/pages/employee/EmployeeInquiriesPage.js
+
 import React, { useEffect, useState } from "react";
 import EmployeeHeader from "./EmployeeHeader";
 import "../../styles/MyInquiriesPage.css";
-import { inquiryData } from "../../data/inquiryData"; // ✅ 통일된 데이터 import
 
 const categories = ["전체", "새 기능", "수정", "버그", "문의", "장애", "긴급 지원"];
 
-export default function MyEmployeePage() {
+export default function EmployeeInquiriesPage() {
   const [inquiries, setInquiries] = useState([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("전체");
   const [currentPage, setCurrentPage] = useState(1);
-  const inquiriesPerPage = 5;
   const [expandedId, setExpandedId] = useState(null);
   const [showNewModal, setShowNewModal] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
-  const deletingItem = inquiries.find(item => item.id === confirmDeleteId);
+  const inquiriesPerPage = 5;
+  const token = localStorage.getItem("token");
 
   const [newForm, setNewForm] = useState({
     title: "",
@@ -26,46 +26,34 @@ export default function MyEmployeePage() {
     file: null,
   });
 
-  // ✅ 초기 데이터 불러오기 (공통 데이터 사용)
+  // 🔹 문의 목록 불러오기 (Flask 연동)
   useEffect(() => {
-    setInquiries(inquiryData);
+    const fetchInquiries = async () => {
+      try {
+        const res = await fetch("http://<EC2-IP>:5000/api/my/inquiries", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        setInquiries(data.data); // pagination 사용 시 .data로 들어감
+      } catch (err) {
+        console.error("내 문의 내역 불러오기 실패:", err);
+      }
+    };
+
+    fetchInquiries();
   }, []);
 
-  useEffect(() => {
-    const dummyData = [
-      {
-        id: 1,
-        title: "장비 점검 요청",
-        category: "문의",
-        customer: "내부팀",
-        inquiryContent: "정기 점검 스케줄을 알고 싶습니다.",
-        answerContent: "월 1회 자동 점검됩니다.",
-        answerStatus: "답변 완료",
-        date: "2024.01.01",
-      },
-      {
-        id: 2,
-        title: "로그인 실패",
-        category: "버그",
-        customer: "내부팀",
-        inquiryContent: "아이디 비밀번호가 맞는데도 로그인 안 됩니다.",
-        answerContent: "",
-        answerStatus: "답변 대기",
-        date: "2024.01.02",
-      },
-    ];
-    setInquiries(dummyData);
-  }, []);
-
+  // 🔹 필터 + 검색
   const filtered = inquiries.filter(item => {
     const categoryMatch = filter === "전체" || item.category === filter;
     const searchMatch =
       item.title.includes(search) ||
-      item.inquiryContent.includes(search) ||
-      item.answerContent.includes(search || "");
+      item.content.includes(search) ||
+      (item.answer || "").includes(search);
     return categoryMatch && searchMatch;
   });
 
+  // 🔹 페이지네이션
   const totalPages = Math.ceil(filtered.length / inquiriesPerPage);
   const paged = filtered.slice(
     (currentPage - 1) * inquiriesPerPage,
@@ -85,38 +73,58 @@ export default function MyEmployeePage() {
     }
   };
 
+  // 🔹 문의 등록
   const submitNewInquiry = async (e) => {
     e.preventDefault();
     const { title, category, customer, inquiryContent, file } = newForm;
 
     if (!title || !category || !customer || !inquiryContent) {
-      alert("모든 필드를 입력해주세요.");
+      alert("모든 항목을 입력해주세요.");
       return;
     }
 
-    const created = {
-      id: Date.now(),
-      title,
-      category,
-      customer,
-      inquiryContent,
-      answerContent: "",
-      answerStatus: "답변 대기",
-      date: new Date().toISOString().slice(0, 10).replace(/-/g, "."),
-      attachment: file ? { name: file.name, url: "#" } : null,
-    };
+    try {
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("category", category);
+      formData.append("customer", customer);
+      formData.append("content", inquiryContent);
+      if (file) formData.append("file", file);
 
-    setInquiries(prev => [created, ...prev]);
-    setShowNewModal(false);
-    setNewForm({ title: "", category: "", customer: "", inquiryContent: "", file: null });
-    setCurrentPage(1);
+      const res = await fetch("http://<EC2-IP>:5000/api/inquiry", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("등록 실패");
+
+      alert("문의가 등록되었습니다.");
+      setShowNewModal(false);
+      window.location.reload(); // 새로고침
+    } catch (err) {
+      console.error("문의 등록 실패:", err);
+      alert("문의 등록 중 오류가 발생했습니다.");
+    }
   };
 
-  const confirmDelete = () => {
-    setInquiries(prev => prev.filter(item => item.id !== confirmDeleteId));
-    setConfirmDeleteId(null);
-    if (expandedId === confirmDeleteId) setExpandedId(null);
+  // 🔹 문의 삭제
+  const confirmDelete = async () => {
+    try {
+      await fetch(`http://<EC2-IP>:5000/api/inquiry/${confirmDeleteId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setInquiries(prev => prev.filter(i => i.id !== confirmDeleteId));
+      setConfirmDeleteId(null);
+    } catch (err) {
+      console.error("삭제 실패:", err);
+    }
   };
+
+  const deletingItem = inquiries.find(i => i.id === confirmDeleteId);
 
   return (
     <>
@@ -124,10 +132,11 @@ export default function MyEmployeePage() {
       <main className="container">
         <section>
           <hgroup>
-            <h2>문의 내역</h2>
-            <h3>사원이 등록한 문의를 확인할 수 있습니다</h3>
+            <h2>내 문의 내역</h2>
+            <h3>직원 본인이 등록한 문의를 확인할 수 있습니다.</h3>
           </hgroup>
 
+          {/* 🔹 검색 및 작성 버튼 */}
           <div className="search-filter-box">
             <input
               type="text"
@@ -143,7 +152,8 @@ export default function MyEmployeePage() {
             </button>
           </div>
 
-          <div className="filter-buttons" role="list">
+          {/* 🔹 카테고리 필터 */}
+          <div className="filter-buttons">
             {categories.map((cat) => (
               <button
                 key={cat}
@@ -158,13 +168,13 @@ export default function MyEmployeePage() {
             ))}
           </div>
 
+          {/* 🔹 목록 */}
           <div className="inquiry-header">
-            <h3>내 문의 내역</h3>
-            <span>총 {filtered.length}건</span>
+            <h3>총 {filtered.length}건</h3>
           </div>
 
           <div className="inquiry-list">
-            {paged.map(item => (
+            {paged.map((item) => (
               <article
                 key={item.id}
                 className={`inquiry-card ${expandedId === item.id ? "expanded" : ""}`}
@@ -174,14 +184,14 @@ export default function MyEmployeePage() {
                   <div className="left-group">
                     <div className="status-tags">
                       <span className="category-tag">{item.category}</span>
-                      <span className={`answer-status ${item.answerStatus === "답변 완료" ? "answered" : "pending"}`}>
-                        {item.answerStatus}
+                      <span className={`answer-status ${item.status === "02" ? "answered" : "pending"}`}>
+                        {item.status === "02" ? "답변 완료" : "답변 대기"}
                       </span>
                     </div>
-                    <h4>{item.title}</h4>
+                    <h4 className="card-title">{item.title}</h4>
                   </div>
                   <div className="right-group">
-                    <time>{item.date}</time>
+                    <time>{item.created_at}</time>
                     <div className="customer-name">{item.customer}</div>
                     <button
                       className="btn-delete"
@@ -199,18 +209,13 @@ export default function MyEmployeePage() {
                   <section className="card-details" onClick={(e) => e.stopPropagation()}>
                     <div className="inquiry-content-section">
                       <strong>문의 내용</strong>
-                      <p>{item.inquiryContent}</p>
-                      {item.attachment && (
-                        <a href={item.attachment.url} target="_blank" rel="noreferrer">
-                          📎 {item.attachment.name}
-                        </a>
-                      )}
-                      <time className="content-date">{item.date}</time>
+                      <p>{item.content}</p>
+                      <time>{item.created_at}</time>
                     </div>
-                    {item.answerContent ? (
+                    {item.answer ? (
                       <div className="answer-section">
                         <strong>답변</strong>
-                        <p>{item.answerContent}</p>
+                        <p>{item.answer}</p>
                       </div>
                     ) : (
                       <div className="pending-answer-notice">
@@ -223,7 +228,7 @@ export default function MyEmployeePage() {
             ))}
           </div>
 
-          {/* 페이지네이션 */}
+          {/* 🔹 페이지네이션 */}
           {totalPages > 1 && (
             <nav className="pagination">
               <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
@@ -246,7 +251,7 @@ export default function MyEmployeePage() {
         </section>
       </main>
 
-      {/* 작성 모달 */}
+      {/* 🔹 작성 모달 */}
       {showNewModal && (
         <div className="modal-backdrop" onClick={() => setShowNewModal(false)}>
           <form
@@ -256,34 +261,28 @@ export default function MyEmployeePage() {
           >
             <header>
               <h2>문의 작성</h2>
-              <button
-                type="button"
-                className="close-btn"
-                onClick={() => setShowNewModal(false)}
-              >
-                ×
-              </button>
+              <button type="button" className="close-btn" onClick={() => setShowNewModal(false)}>×</button>
             </header>
 
-            <label htmlFor="title">제목</label>
-            <input id="title" name="title" value={newForm.title} onChange={handleNewFormChange} required />
+            <label>제목</label>
+            <input name="title" value={newForm.title} onChange={handleNewFormChange} required />
 
-            <label htmlFor="customer">고객사</label>
-            <input id="customer" name="customer" value={newForm.customer} onChange={handleNewFormChange} required />
+            <label>고객사</label>
+            <input name="customer" value={newForm.customer} onChange={handleNewFormChange} required />
 
-            <label htmlFor="category">카테고리</label>
-            <select id="category" name="category" value={newForm.category} onChange={handleNewFormChange} required>
+            <label>카테고리</label>
+            <select name="category" value={newForm.category} onChange={handleNewFormChange} required>
               <option value="">카테고리 선택</option>
               {categories.filter(c => c !== "전체").map(cat => (
                 <option key={cat} value={cat}>{cat}</option>
               ))}
             </select>
 
-            <label htmlFor="inquiryContent">문의 내용</label>
-            <textarea id="inquiryContent" name="inquiryContent" rows={5} value={newForm.inquiryContent} onChange={handleNewFormChange} required />
+            <label>문의 내용</label>
+            <textarea name="inquiryContent" rows={5} value={newForm.inquiryContent} onChange={handleNewFormChange} required />
 
-            <label htmlFor="fileUpload">첨부 파일</label>
-            <input id="fileUpload" name="fileUpload" type="file" onChange={handleNewFormChange} accept=".pdf,.jpg,.jpeg" />
+            <label>첨부 파일</label>
+            <input name="fileUpload" type="file" onChange={handleNewFormChange} accept=".pdf,.jpg,.jpeg" />
 
             <footer className="modal-footer">
               <button type="button" className="btn cancel-btn" onClick={() => setShowNewModal(false)}>취소</button>
@@ -293,7 +292,7 @@ export default function MyEmployeePage() {
         </div>
       )}
 
-      {/* 삭제 모달 */}
+      {/* 🔹 삭제 확인 모달 */}
       {confirmDeleteId && (
         <div className="modal-backdrop" onClick={() => setConfirmDeleteId(null)}>
           <div className="modal confirm-delete-modal" onClick={(e) => e.stopPropagation()}>

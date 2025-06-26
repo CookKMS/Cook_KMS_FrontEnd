@@ -1,8 +1,8 @@
+// src/pages/employee/MyEmployeePage.js
+
 import React, { useEffect, useState } from "react";
 import EmployeeHeader from "./EmployeeHeader";
 import "../../styles/MyEmployeePage.css";
-import { inquiryData } from "../../data/inquiryData";
-import { knowledgeData } from "../../data/knowledgeData";
 
 export default function MyEmployeePage() {
   const [inquiries, setInquiries] = useState([]);
@@ -18,58 +18,113 @@ export default function MyEmployeePage() {
   const [currentInquiryPage, setCurrentInquiryPage] = useState(1);
   const [currentKnowledgePage, setCurrentKnowledgePage] = useState(1);
   const itemsPerPage = 5;
+  const token = localStorage.getItem("token");
 
+  // ✅ 데이터 불러오기
   useEffect(() => {
-    const mapped = inquiryData.map(item => ({
-      id: item.id,
-      title: item.subject,
-      customer: item.manufacturer,
-      category: item.category,
-      answerStatus: item.status,
-      date: item.date,
-      inquiryContent: item.message,
-      answerContent: item.response
-    }));
-    setInquiries(mapped);
-    setKnowledgeList(knowledgeData);
+    const fetchData = async () => {
+      try {
+        const res1 = await fetch("http://<EC2-IP>:5000/api/my/inquiries", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const res2 = await fetch("http://<EC2-IP>:5000/api/my/knowledge", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data1 = await res1.json();
+        const data2 = await res2.json();
+        setInquiries(data1.data || []);
+        setKnowledgeList(data2.data || []);
+      } catch (err) {
+        alert("데이터 불러오기 실패");
+        console.error(err);
+      }
+    };
+    fetchData();
   }, []);
 
-  const handleDeleteInquiry = () => {
-    setInquiries(prev => prev.filter(q => q.id !== confirmDeleteInquiryId));
+  // ✅ 삭제
+  const handleDeleteInquiry = async () => {
+    try {
+      await fetch(`http://<EC2-IP>:5000/api/inquiry/${confirmDeleteInquiryId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setInquiries(prev => prev.filter(q => q.id !== confirmDeleteInquiryId));
+    } catch {
+      alert("삭제 실패");
+    }
     setConfirmDeleteInquiryId(null);
   };
 
-  const handleDeleteKnowledge = () => {
-    setKnowledgeList(prev => prev.filter(k => k.id !== confirmDeleteKnowledgeId));
+  const handleDeleteKnowledge = async () => {
+    try {
+      await fetch(`http://<EC2-IP>:5000/api/knowledge/${confirmDeleteKnowledgeId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setKnowledgeList(prev => prev.filter(k => k.id !== confirmDeleteKnowledgeId));
+    } catch {
+      alert("삭제 실패");
+    }
     setConfirmDeleteKnowledgeId(null);
   };
 
-  const handleEditSave = (e) => {
+  // ✅ 수정
+  const handleEditSave = async (e) => {
     e.preventDefault();
     const form = e.target;
     const updated = {
-      ...editingItem,
       title: form.title.value,
       category: form.category.value,
-      inquiryContent: form.inquiryContent.value,
+      content: form.inquiryContent.value,
     };
-    setInquiries(prev => prev.map(q => (q.id === updated.id ? updated : q)));
+
+    try {
+      await fetch(`http://<EC2-IP>:5000/api/inquiry/${editingItem.id}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updated),
+      });
+      setInquiries(prev =>
+        prev.map(q => (q.id === editingItem.id ? { ...q, ...updated } : q))
+      );
+    } catch {
+      alert("문의 수정 실패");
+    }
     setEditingItem(null);
   };
 
-  const handleEditKnowledgeSave = (e) => {
+  const handleEditKnowledgeSave = async (e) => {
     e.preventDefault();
     const form = e.target;
     const updated = {
-      ...editingKnowledge,
       title: form.title.value,
       category: form.category.value,
       summary: form.summary.value,
     };
-    setKnowledgeList(prev => prev.map(k => (k.id === updated.id ? updated : k)));
+
+    try {
+      await fetch(`http://<EC2-IP>:5000/api/knowledge/${editingKnowledge.id}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updated),
+      });
+      setKnowledgeList(prev =>
+        prev.map(k => (k.id === editingKnowledge.id ? { ...k, ...updated } : k))
+      );
+    } catch {
+      alert("지식 문서 수정 실패");
+    }
     setEditingKnowledge(null);
   };
 
+  // ✅ 페이지네이션 계산
   const pagedInquiries = inquiries.slice((currentInquiryPage - 1) * itemsPerPage, currentInquiryPage * itemsPerPage);
   const pagedKnowledge = knowledgeList.slice((currentKnowledgePage - 1) * itemsPerPage, currentKnowledgePage * itemsPerPage);
   const inquiryPages = Math.ceil(inquiries.length / itemsPerPage);
@@ -79,7 +134,6 @@ export default function MyEmployeePage() {
     <>
       <EmployeeHeader />
       <main className="container">
-
         {/* 🔷 문의 내역 */}
         <section>
           <hgroup>
@@ -98,41 +152,25 @@ export default function MyEmployeePage() {
                   <div className="left-group">
                     <div className="status-tags">
                       <span className="category-tag">{item.category}</span>
-                      <span className={`answer-status ${item.answerStatus === "답변 완료" ? "answered" : "pending"}`}>
-                        {item.answerStatus}
+                      <span className={`answer-status ${item.status === "02" ? "answered" : "pending"}`}>
+                        {item.status === "02" ? "답변 완료" : "답변 대기"}
                       </span>
                     </div>
-                    <h4 className="card-title">{item.title}</h4>
+                    <h4>{item.title}</h4>
                   </div>
                   <div className="right-group">
-                    <time>{item.date}</time>
-                    {item.answerStatus === "답변 대기" ? (
-                      <>
-                        <button className="btn-delete" onClick={(e) => {
-                          e.stopPropagation();
-                          setConfirmDeleteInquiryId(item.id);
-                        }}>🗑️</button>
-                        <button className="btn-edit" onClick={(e) => {
-                          e.stopPropagation();
-                          setEditingItem(item);
-                        }}>✏️</button>
-                      </>
-                    ) : (
-                      <>
-                        <button className="btn-disabled" disabled>🗑️</button>
-                        <button className="btn-disabled" disabled>✏️</button>
-                      </>
-                    )}
+                    <time>{item.created_at}</time>
+                    <button onClick={(e) => { e.stopPropagation(); setConfirmDeleteInquiryId(item.id); }}>🗑️</button>
+                    <button onClick={(e) => { e.stopPropagation(); setEditingItem(item); }}>✏️</button>
                   </div>
                 </header>
                 {expandedInquiryId === item.id && (
                   <section className="card-details">
-                    <strong>문의 내용</strong>
-                    <p>{item.inquiryContent}</p>
-                    {item.answerContent && (
+                    <p>{item.content}</p>
+                    {item.answer && (
                       <div className="answer-section">
                         <strong>답변</strong>
-                        <p>{item.answerContent}</p>
+                        <p>{item.answer}</p>
                       </div>
                     )}
                   </section>
@@ -140,10 +178,9 @@ export default function MyEmployeePage() {
               </article>
             ))}
           </div>
-
+          {/* 문의 페이지네이션 */}
           {inquiryPages > 1 && (
             <nav className="pagination">
-              <button onClick={() => setCurrentInquiryPage(p => Math.max(1, p - 1))} disabled={currentInquiryPage === 1}>&lt;</button>
               {Array.from({ length: inquiryPages }).map((_, i) => (
                 <button
                   key={i}
@@ -153,13 +190,12 @@ export default function MyEmployeePage() {
                   {i + 1}
                 </button>
               ))}
-              <button onClick={() => setCurrentInquiryPage(p => Math.min(inquiryPages, p + 1))} disabled={currentInquiryPage === inquiryPages}>&gt;</button>
             </nav>
           )}
         </section>
 
-        {/* 🔶 지식 문서 섹션 */}
-        <section style={{ marginTop: "3rem" }}>
+        {/* 🔶 지식 문서 내역 */}
+        <section>
           <hgroup>
             <h2>나의 지식 문서</h2>
             <h3>직원이 작성한 문서를 확인하고 수정/삭제할 수 있습니다.</h3>
@@ -175,33 +211,25 @@ export default function MyEmployeePage() {
                 <header className="card-header">
                   <div className="left-group">
                     <span className="category-tag">{item.category}</span>
-                    <h4 className="card-title">{item.title}</h4>
+                    <h4>{item.title}</h4>
                   </div>
                   <div className="right-group">
-                    <time>{item.date}</time>
-                    <button className="btn-delete" onClick={(e) => {
-                      e.stopPropagation();
-                      setConfirmDeleteKnowledgeId(item.id);
-                    }}>🗑️</button>
-                    <button className="btn-edit" onClick={(e) => {
-                      e.stopPropagation();
-                      setEditingKnowledge(item);
-                    }}>✏️</button>
+                    <time>{item.created_at}</time>
+                    <button onClick={(e) => { e.stopPropagation(); setConfirmDeleteKnowledgeId(item.id); }}>🗑️</button>
+                    <button onClick={(e) => { e.stopPropagation(); setEditingKnowledge(item); }}>✏️</button>
                   </div>
                 </header>
                 {expandedKnowledgeId === item.id && (
                   <section className="card-details">
-                    <strong>요약 설명</strong>
                     <p>{item.summary}</p>
                   </section>
                 )}
               </article>
             ))}
           </div>
-
+          {/* 지식 페이지네이션 */}
           {knowledgePages > 1 && (
             <nav className="pagination">
-              <button onClick={() => setCurrentKnowledgePage(p => Math.max(1, p - 1))} disabled={currentKnowledgePage === 1}>&lt;</button>
               {Array.from({ length: knowledgePages }).map((_, i) => (
                 <button
                   key={i}
@@ -211,7 +239,6 @@ export default function MyEmployeePage() {
                   {i + 1}
                 </button>
               ))}
-              <button onClick={() => setCurrentKnowledgePage(p => Math.min(knowledgePages, p + 1))} disabled={currentKnowledgePage === knowledgePages}>&gt;</button>
             </nav>
           )}
         </section>

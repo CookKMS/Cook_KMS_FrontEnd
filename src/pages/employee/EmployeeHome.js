@@ -2,20 +2,20 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import EmployeeHeader from './EmployeeHeader'; // 사원용 헤더 컴포넌트
-import '../../styles/HomePage.css'; // 스타일은 그대로 사용
+import EmployeeHeader from './EmployeeHeader'; // 사원용 공통 헤더
+import '../../styles/HomePage.css'; // 사용자와 동일한 스타일 재사용
 
 function EmployeeHome() {
   const navigate = useNavigate();
 
-  // 🔹 시작하기 버튼 클릭 시 사원용 지식관리 페이지로 이동
+  // 🔹 버튼 클릭 시 지식관리 페이지로 이동
   const handleStartClick = () => {
     navigate('/employee-knowledge');
   };
 
   return (
     <>
-      {/* 🔹 사원용 헤더 렌더링 */}
+      {/* 🔹 사원 전용 헤더 렌더링 */}
       <EmployeeHeader />
 
       {/* 🔹 홈 콘텐츠 영역 */}
