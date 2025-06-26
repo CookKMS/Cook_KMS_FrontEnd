@@ -1,9 +1,7 @@
-// src/pages/MyInquiriesPage.js
-
 import React, { useEffect, useState } from "react";
+import axios from "../utils/axiosInstance";
 import Header from "../components/Header";
 import "../styles/MyInquiriesPage.css";
-import { inquiryData as dummyData } from "../data/inquiryData";
 
 const categories = ["전체", "새 기능", "수정", "버그", "문의", "장애", "긴급 지원"];
 
@@ -25,16 +23,87 @@ export default function MyInquiriesPage() {
     file: null,
   });
 
+  // ✅ 나의 문의 내역 불러오기
+  const fetchInquiries = async () => {
+    try {
+      const res = await axios.get("/my/inquiries");
+      setInquiries(res.data.data);
+    } catch (err) {
+      console.error("나의 문의 불러오기 실패:", err);
+    }
+  };
+
   useEffect(() => {
-    setInquiries(dummyData); // 실제 API 연동 시 이 부분 교체
+    fetchInquiries();
   }, []);
+
+  // ✅ 문의 등록
+  const submitNewInquiry = async (e) => {
+    e.preventDefault();
+    const { title, category, customer, inquiryContent, file } = newForm;
+
+    if (!title || !category || !customer || !inquiryContent) {
+      alert("모든 항목을 입력해주세요.");
+      return;
+    }
+
+    try {
+      let file_id = null;
+      if (file && file.size > 0) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const uploadRes = await axios.post("/file/upload", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        file_id = uploadRes.data.file_id;
+      }
+
+      const payload = {
+        title,
+        content: inquiryContent,
+        category,
+        file_path: file_id ? `/api/file/download/${file_id}` : null,
+      };
+
+      await axios.post("/inquiry", payload);
+      alert("문의가 등록되었습니다.");
+      setShowNewModal(false);
+      setNewForm({ title: "", category: "", customer: "", inquiryContent: "", file: null });
+      fetchInquiries(); // 목록 갱신
+    } catch (error) {
+      console.error("문의 등록 실패:", error);
+      alert("등록 중 오류가 발생했습니다.");
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`/my/inquiries/${id}`);
+      alert("문의가 삭제되었습니다.");
+      setConfirmDeleteId(null);
+      fetchInquiries(); // 목록 갱신
+    } catch (err) {
+      console.error("삭제 실패:", err);
+      alert("삭제 중 오류가 발생했습니다.");
+    }
+  };
+
+  const handleNewFormChange = (e) => {
+    const { name, value, files } = e.target;
+    if (name === "fileUpload") {
+      setNewForm(prev => ({ ...prev, file: files[0] || null }));
+    } else {
+      setNewForm(prev => ({ ...prev, [name]: value }));
+    }
+  };
 
   const filtered = inquiries.filter(item => {
     const matchCategory = filter === "전체" || item.category === filter;
     const matchKeyword =
       (item.title || "").includes(search) ||
-      (item.inquiryContent || "").includes(search) ||
-      (item.answerContent || "").includes(search);
+      (item.content || "").includes(search) ||
+      (item.answer || "").includes(search);
     return matchCategory && matchKeyword;
   });
 
@@ -48,50 +117,10 @@ export default function MyInquiriesPage() {
     setExpandedId(prev => (prev === id ? null : id));
   };
 
-  const handleNewFormChange = (e) => {
-    const { name, value, files } = e.target;
-    if (name === "fileUpload") {
-      setNewForm(prev => ({ ...prev, file: files[0] || null }));
-    } else {
-      setNewForm(prev => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const submitNewInquiry = async (e) => {
-    e.preventDefault();
-    const { title, category, customer, inquiryContent, file } = newForm;
-
-    if (!title || !category || !customer || !inquiryContent) {
-      alert("모든 항목을 입력해주세요.");
-      return;
-    }
-
-    const newItem = {
-      id: Date.now(),
-      title,
-      category,
-      customer,
-      inquiryContent,
-      answerContent: "",
-      answerStatus: "답변 대기",
-      date: new Date().toISOString().slice(0, 10).replace(/-/g, "."),
-      attachment: file ? { name: file.name, url: "#" } : null,
-    };
-
-    setInquiries(prev => [newItem, ...prev]);
-    setShowNewModal(false);
-    setNewForm({ title: "", category: "", customer: "", inquiryContent: "", file: null });
-    setCurrentPage(1);
-  };
-
-  const handleDelete = (id) => {
-    setInquiries(prev => prev.filter(q => q.id !== id));
-    setConfirmDeleteId(null);
-  };
-
   return (
     <>
       <Header />
+      {/* 이하 동일 - 목록 표시, 모달, 삭제 확인 등 */}
       <main className="container">
         <section>
           <hgroup>
@@ -148,15 +177,14 @@ export default function MyInquiriesPage() {
                   <div className="left-group">
                     <div className="status-tags">
                       <span className="category-tag">{item.category}</span>
-                      <span className={`answer-status ${item.answerStatus === "답변 완료" ? "answered" : "pending"}`}>
-                        {item.answerStatus}
+                      <span className={`answer-status ${item.status === "02" ? "answered" : "pending"}`}>
+                        {item.status === "02" ? "답변 완료" : "답변 대기"}
                       </span>
                     </div>
                     <h4 className="card-title">{item.title}</h4>
                   </div>
                   <div className="right-group">
-                    <time>{item.date}</time>
-                    <div className="customer-name">{item.customer}</div>
+                    <time>{item.created_at?.slice(0, 10).replace(/-/g, ".")}</time>
                     <button
                       className="btn-delete"
                       onClick={(e) => {
@@ -173,18 +201,18 @@ export default function MyInquiriesPage() {
                   <section className="card-details" onClick={(e) => e.stopPropagation()}>
                     <div className="inquiry-content-section">
                       <strong>문의 내용</strong>
-                      <p>{item.inquiryContent}</p>
-                      {item.attachment && (
-                        <a href={item.attachment.url} target="_blank" rel="noreferrer">
-                          📎 {item.attachment.name}
+                      <p>{item.content}</p>
+                      {item.file_path && (
+                        <a href={item.file_path} target="_blank" rel="noreferrer">
+                          📎 첨부파일 다운로드
                         </a>
                       )}
-                      <time className="content-date">{item.date}</time>
+                      <time className="content-date">{item.created_at?.slice(0, 10).replace(/-/g, ".")}</time>
                     </div>
-                    {item.answerContent ? (
+                    {item.comments && item.comments.length > 0 ? (
                       <div className="answer-section">
                         <strong>답변</strong>
-                        <p>{item.answerContent}</p>
+                        <p>{item.comments[0].content}</p>
                       </div>
                     ) : (
                       <div className="pending-answer-notice">
@@ -257,7 +285,7 @@ export default function MyInquiriesPage() {
         </div>
       )}
 
-      {/* 삭제 모달 */}
+      {/* 삭제 확인 모달 */}
       {confirmDeleteId && (
         <div className="modal-backdrop" onClick={() => setConfirmDeleteId(null)}>
           <div className="modal confirm" onClick={(e) => e.stopPropagation()}>

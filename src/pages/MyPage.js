@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import axios from "../utils/axiosInstance";
 import Header from "../components/Header";
 import "../styles/MyInquiriesPage.css"; // 카드 스타일, 모달 등 그대로 재활용
 
@@ -10,26 +11,12 @@ export default function MyPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const inquiriesPerPage = 5;
 
-  // ✅ [Flask 연동] GET /api/my-inquiries
+  // ✅ [연동] 나의 문의 목록 조회
   useEffect(() => {
     const fetchMyInquiries = async () => {
       try {
-        // const res = await fetch("/api/my-inquiries");
-        // const data = await res.json();
-        // setInquiries(data);
-
-        // 테스트용 더미 데이터 20개 삽입
-        const dummyData = [...Array(20)].map((_, i) => ({
-          id: i + 1,
-          title: `테스트 문의 제목 ${i + 1}`,
-          category: ["문의", "버그", "장애", "수정", "새 기능", "긴급 지원"][i % 6],
-          customer: `고객사 ${String.fromCharCode(65 + (i % 5))}`,
-          inquiryContent: `이것은 ${i + 1}번째 문의의 본문 내용입니다.`,
-          answerStatus: i % 3 === 0 ? "답변 완료" : "답변 대기",
-          answerContent: i % 3 === 0 ? "이 문의에 대한 답변입니다." : "",
-          date: `2023.08.${(i % 30 + 1).toString().padStart(2, "0")}`,
-        }));
-        setInquiries(dummyData);
+        const res = await axios.get("/my/inquiries");
+        setInquiries(res.data.data);
       } catch (err) {
         console.error("나의 문의 불러오기 실패:", err);
       }
@@ -47,42 +34,40 @@ export default function MyPage() {
     setExpandedId(prev => (prev === id ? null : id));
   };
 
-  // ✅ [Flask 연동] DELETE /api/inquiries/:id
+  // ✅ [연동] 문의 삭제
   const handleDelete = async (id) => {
     try {
-      // await fetch(`/api/inquiries/${id}`, { method: "DELETE" });
+      await axios.delete(`/my/inquiries/${id}`);
       setInquiries(prev => prev.filter(q => q.id !== id));
       setConfirmDeleteId(null);
       if (expandedId === id) setExpandedId(null);
-    } catch {
+    } catch (err) {
       alert("삭제 실패");
+      console.error(err);
     }
   };
 
-  // ✅ [Flask 연동] PUT /api/inquiries/:id
+  // ✅ [연동] 문의 수정
   const handleEditSave = async (e) => {
     e.preventDefault();
     const form = e.target;
     const updated = {
-      ...editingItem,
       title: form.title.value,
+      content: form.inquiryContent.value,
       category: form.category.value,
-      inquiryContent: form.inquiryContent.value,
     };
 
     try {
-      // await fetch(`/api/inquiries/${editingItem.id}`, {
-      //   method: "PUT",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify(updated),
-      // });
-
+      await axios.put(`/my/inquiries/${editingItem.id}`, updated);
       setInquiries(prev =>
-        prev.map((q) => (q.id === updated.id ? updated : q))
+        prev.map((q) =>
+          q.id === editingItem.id ? { ...q, ...updated } : q
+        )
       );
       setEditingItem(null);
-    } catch {
+    } catch (err) {
       alert("수정 실패");
+      console.error(err);
     }
   };
 
@@ -110,15 +95,15 @@ export default function MyPage() {
                   <div className="left-group">
                     <div className="status-tags">
                       <span className="category-tag">{item.category}</span>
-                      <span className={`answer-status ${item.answerStatus === "답변 완료" ? "answered" : "pending"}`}>
-                        {item.answerStatus}
+                      <span className={`answer-status ${item.status === "02" ? "answered" : "pending"}`}>
+                        {item.status === "02" ? "답변 완료" : "답변 대기"}
                       </span>
                     </div>
                     <h4 className="card-title">{item.title}</h4>
                   </div>
                   <div className="right-group">
-                    <time>{item.date}</time>
-                    {item.answerStatus !== "답변 완료" ? (
+                    <time>{item.created_at?.slice(0, 10).replace(/-/g, ".")}</time>
+                    {item.status !== "02" ? (
                       <>
                         <button className="btn-delete" onClick={(e) => {
                           e.stopPropagation();
@@ -142,14 +127,18 @@ export default function MyPage() {
                   <section className="card-details" onClick={(e) => e.stopPropagation()}>
                     <div className="inquiry-content-section">
                       <strong>문의 내용</strong>
-                      <p>{item.inquiryContent}</p>
-                      <time className="content-date">{item.date}</time>
+                      <p>{item.content}</p>
+                      {item.file_path && (
+                        <a href={item.file_path} target="_blank" rel="noreferrer">
+                          📎 첨부파일 다운로드
+                        </a>
+                      )}
+                      <time className="content-date">{item.created_at?.slice(0, 10).replace(/-/g, ".")}</time>
                     </div>
-                    {item.answerContent ? (
+                    {item.comments && item.comments.length > 0 ? (
                       <div className="answer-section">
                         <strong>답변</strong>
-                        <time className="answer-date">{item.date}</time>
-                        <p>{item.answerContent}</p>
+                        <p>{item.comments[0].content}</p>
                       </div>
                     ) : (
                       <div className="pending-answer-notice">
@@ -162,7 +151,7 @@ export default function MyPage() {
             ))}
           </div>
 
-          {/* ✅ 페이지네이션 */}
+          {/* 페이지네이션 */}
           {totalPages > 1 && (
             <nav className="pagination" aria-label="페이지 이동">
               <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
@@ -183,7 +172,7 @@ export default function MyPage() {
             </nav>
           )}
 
-          {/* ✅ 수정 모달 */}
+          {/* 수정 모달 */}
           {editingItem && (
             <div className="modal-backdrop" onClick={() => setEditingItem(null)}>
               <form className="modal" onClick={(e) => e.stopPropagation()} onSubmit={handleEditSave}>
@@ -205,7 +194,7 @@ export default function MyPage() {
                 </label>
                 <label>
                   문의 내용
-                  <textarea name="inquiryContent" rows={5} defaultValue={editingItem.inquiryContent} required />
+                  <textarea name="inquiryContent" rows={5} defaultValue={editingItem.content} required />
                 </label>
                 <div className="modal-footer">
                   <button type="button" onClick={() => setEditingItem(null)}>취소</button>
@@ -215,7 +204,7 @@ export default function MyPage() {
             </div>
           )}
 
-          {/* ✅ 삭제 확인 모달 */}
+          {/* 삭제 확인 모달 */}
           {confirmDeleteId && (
             <div className="modal-backdrop" onClick={() => setConfirmDeleteId(null)}>
               <div className="modal confirm" onClick={(e) => e.stopPropagation()}>

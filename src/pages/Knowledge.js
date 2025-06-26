@@ -1,10 +1,8 @@
-// src/pages/Knowledge.js
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from '../utils/axiosInstance'; // ✅ axios 인스턴스
 import Header from '../components/Header';
 import KnowledgeDetailModal from '../components/KnowledgeDetailModal';
 import '../styles/Knowledge.css';
-import { knowledgeData } from '../data/knowledgeData'; // ✅ 외부에서 데이터 import
 
 const categories = ['전체', '새 기능', '수정', '버그', '문의', '장애', '긴급 지원'];
 
@@ -15,18 +13,74 @@ function Knowledge() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [showNewModal, setShowNewModal] = useState(false);
 
+  const [knowledgeList, setKnowledgeList] = useState([]);
   const itemsPerPage = 6;
 
-  const filtered = knowledgeData.filter(item => {
+  // ✅ 지식 문서 전체 불러오기
+  const fetchKnowledge = async () => {
+    try {
+      const res = await axios.get('/knowledge'); // ✅ GET /api/knowledge/
+      setKnowledgeList(res.data);
+    } catch (error) {
+      console.error('지식 문서 불러오기 실패:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchKnowledge();
+  }, []);
+
+  const filtered = knowledgeList.filter(item => {
     const matchCategory = selectedCategory === '전체' || item.category === selectedCategory;
     const matchSearch =
       item.title.includes(searchTerm) ||
-      item.summary.includes(searchTerm);
+      (item.content && item.content.includes(searchTerm));
     return matchCategory && matchSearch;
   });
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const paged = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  // ✅ 문서 등록 처리
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+    const title = formData.get('title');
+    const category = formData.get('category');
+    const content = formData.get('summary'); // summary -> content에 저장
+    const file = formData.get('fileUpload');
+
+    try {
+      let uploadedFileIds = [];
+
+      if (file && file.size > 0) {
+        const fileForm = new FormData();
+        fileForm.append('file', file);
+        const uploadRes = await axios.post('/file/upload', fileForm, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        uploadedFileIds.push(uploadRes.data.file_id); // ✅ 파일 ID 저장
+      }
+
+      const payload = {
+        title,
+        content,
+        category,
+        tags: [],
+        files: uploadedFileIds,
+      };
+
+      await axios.post('/knowledge/create', payload);
+      alert('지식 문서가 등록되었습니다.');
+      form.reset();
+      setShowNewModal(false);
+      fetchKnowledge(); // 목록 갱신
+    } catch (error) {
+      console.error('문서 등록 실패:', error);
+      alert('문서 등록 중 오류가 발생했습니다.');
+    }
+  };
 
   return (
     <>
@@ -35,7 +89,7 @@ function Knowledge() {
         <h2>지식 관리 시스템</h2>
         <p>팀에서 공유하는 지식과 정보를 한 곳에서 관리하세요</p>
 
-        {/* ✅ 검색창 + 문서 추가 버튼 */}
+        {/* ✅ 검색 + 추가 버튼 */}
         <div className="knowledge-search" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <input
             type="text"
@@ -86,10 +140,10 @@ function Knowledge() {
             <div key={item.id} className="knowledge-card" onClick={() => setSelectedItem(item)}>
               <div className="card-header">
                 <span className={`category-tag ${item.category}`}>{item.category}</span>
-                <time className="card-date">{item.date}</time>
+                <time className="card-date">{item.created_at?.slice(0, 10)}</time>
               </div>
               <h3>{item.title}</h3>
-              <p>{item.summary}</p>
+              <p>{item.content?.slice(0, 100) + '...'}</p>
             </div>
           ))}
         </div>
@@ -120,7 +174,7 @@ function Knowledge() {
           <KnowledgeDetailModal item={selectedItem} onClose={() => setSelectedItem(null)} />
         )}
 
-        {/* ✅ MyInquiries 스타일의 문서 등록 모달 */}
+        {/* ✅ 문서 등록 모달 */}
         {showNewModal && (
           <div
             className="modal-backdrop"
@@ -131,11 +185,7 @@ function Knowledge() {
             <form
               className="modal new-inquiry-modal"
               onClick={(e) => e.stopPropagation()}
-              onSubmit={(e) => {
-                e.preventDefault();
-                alert('📡 [TODO] Flask API 연동 필요: POST /api/knowledge');
-                setShowNewModal(false);
-              }}
+              onSubmit={handleSubmit}
             >
               <header>
                 <h2>지식 문서 추가</h2>
@@ -150,13 +200,7 @@ function Knowledge() {
               </header>
 
               <label htmlFor="title">문서 제목</label>
-              <input
-                id="title"
-                name="title"
-                type="text"
-                placeholder="문서 제목을 입력하세요"
-                required
-              />
+              <input id="title" name="title" type="text" placeholder="문서 제목을 입력하세요" required />
 
               <label htmlFor="category">카테고리</label>
               <select id="category" name="category" required>
@@ -167,27 +211,13 @@ function Knowledge() {
               </select>
 
               <label htmlFor="summary">요약 설명</label>
-              <textarea
-                id="summary"
-                name="summary"
-                rows="4"
-                placeholder="문서 내용을 간략히 요약해주세요"
-              />
+              <textarea id="summary" name="summary" rows="4" placeholder="문서 내용을 간략히 요약해주세요" />
 
               <label htmlFor="fileUpload">첨부 파일 (선택)</label>
-              <input
-                id="fileUpload"
-                name="fileUpload"
-                type="file"
-                accept=".pdf,.jpg,.jpeg"
-              />
+              <input id="fileUpload" name="fileUpload" type="file" accept=".pdf,.jpg,.jpeg" />
 
               <footer className="modal-footer">
-                <button
-                  type="button"
-                  className="btn cancel-btn"
-                  onClick={() => setShowNewModal(false)}
-                >
+                <button type="button" className="btn cancel-btn" onClick={() => setShowNewModal(false)}>
                   취소
                 </button>
                 <button type="submit" className="btn submit-btn">
