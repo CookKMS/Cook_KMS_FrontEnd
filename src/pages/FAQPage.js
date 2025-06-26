@@ -1,50 +1,48 @@
 import React, { useState, useEffect } from "react";
+import axios from "../utils/axiosInstance"; // ✅ axios 인스턴스
 import Header from "../components/Header";
 import "../styles/FAQPage.css";
-// [TODO: 초기 개발단계에서만 사용] 실제 서비스에서는 API 연동 예정
-import { faqData as dummyData } from "../data/faqData";
 
-// ✅ 카테고리 목록 (공통 코드 테이블과 매핑 가능)
+// ✅ 카테고리 목록 - 공통 코드 기준
 const categories = ['전체', '설치,구성', '접근통제', '계정관리', '기타'];
 
 export default function FAQPage() {
-  // 📦 전체 FAQ 목록
   const [faqList, setFaqList] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("전체");
   const [expandedIndex, setExpandedIndex] = useState(null);
 
-  // 📄 페이지네이션
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // ✅ FAQ 데이터 초기 로딩
-  useEffect(() => {
-    const fetchFaqs = async () => {
-      try {
-        // [Flask 연동 시 아래 코드 사용]
-        // const res = await fetch("/api/faq"); // ✅ GET /api/faq
-        // const data = await res.json();
-        // setFaqList(data);
+  // ✅ FAQ 데이터 로드 함수
+  const fetchFaqs = async () => {
+    try {
+      let url = "/faq";
 
-        // 현재는 더미 데이터 사용
-        setFaqList(dummyData);
-      } catch (err) {
-        console.error("FAQ 불러오기 실패:", err);
+      // 🔍 카테고리 필터링 요청
+      if (selectedCategory !== "전체") {
+        url = `/faq/category/${selectedCategory}`;
       }
-    };
 
+      const response = await axios.get(url);
+      setFaqList(response.data);
+    } catch (error) {
+      console.error("FAQ 목록 불러오기 실패:", error);
+    }
+  };
+
+  // ✅ 최초 렌더링 및 카테고리 변경 시 API 호출
+  useEffect(() => {
     fetchFaqs();
-  }, []);
+  }, [selectedCategory]);
 
-  // ✅ 카테고리 및 검색어 기준 필터링
+  // ✅ 검색어 필터링 (프론트에서 처리)
   const filteredFaqs = faqList.filter((faq) => {
-    const matchCategory = selectedCategory === "전체" || faq.category === selectedCategory;
     const matchSearch =
-      faq.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (typeof faq.answer === "string" &&
-        faq.answer.toLowerCase().includes(searchTerm.toLowerCase()));
-    return matchCategory && matchSearch;
+      faq.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (faq.content && faq.content.toLowerCase().includes(searchTerm.toLowerCase()));
+    return matchSearch;
   });
 
   // ✅ 페이지네이션 처리
@@ -64,7 +62,7 @@ export default function FAQPage() {
       <main className="container faq-page">
         <h1>자주 묻는 질문 (FAQ)</h1>
 
-        {/* 🔍 검색 입력 */}
+        {/* 🔍 검색어 입력 */}
         <input
           type="search"
           aria-label="검색어 입력"
@@ -73,11 +71,11 @@ export default function FAQPage() {
           value={searchTerm}
           onChange={(e) => {
             setSearchTerm(e.target.value);
-            setCurrentPage(1); // 검색 시 페이지 초기화
+            setCurrentPage(1);
           }}
         />
 
-        {/* 🔘 카테고리 필터 */}
+        {/* 🔘 카테고리 버튼 */}
         <nav className="faq-categories" role="list">
           {categories.map((cat) => (
             <button
@@ -86,7 +84,7 @@ export default function FAQPage() {
               className={`faq-category-btn ${selectedCategory === cat ? "active" : ""}`}
               onClick={() => {
                 setSelectedCategory(cat);
-                setCurrentPage(1); // 카테고리 변경 시 페이지 초기화
+                setCurrentPage(1);
               }}
               role="listitem"
             >
@@ -114,8 +112,7 @@ export default function FAQPage() {
                     aria-controls={`faq-answer-${globalIndex}`}
                     id={`faq-question-${globalIndex}`}
                   >
-                    {/* ✅ 제목 앞에 [카테고리] 표시 */}
-                    [{faq.category}] {faq.question}
+                    [{faq.category}] {faq.title}
                     <span className="faq-toggle-icon" aria-hidden="true">
                       {expandedIndex === globalIndex ? "▲" : "▼"}
                     </span>
@@ -128,7 +125,7 @@ export default function FAQPage() {
                       role="region"
                       aria-labelledby={`faq-question-${globalIndex}`}
                     >
-                      <p>{faq.answer}</p>
+                      <p>{faq.content}</p>
                     </div>
                   )}
                 </article>
@@ -174,7 +171,7 @@ export default function FAQPage() {
               : `${(currentPage - 1) * itemsPerPage + 1}-${Math.min(
                   currentPage * itemsPerPage,
                   filteredFaqs.length
-                )}`}
+                )}`}{" "}
             / 총 {faqList.length}건의 자주 묻는 질문
           </small>
         </footer>
