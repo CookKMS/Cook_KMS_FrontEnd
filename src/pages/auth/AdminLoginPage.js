@@ -5,62 +5,57 @@ import { Link, useNavigate } from 'react-router-dom';
 import '../../styles/auth/AdminLoginPage.css';
 
 function AdminLoginPage() {
-  // 🔹 관리자 로그인 입력값 상태 관리
+  // 🔹 입력값 상태 관리
   const [formData, setFormData] = useState({
     username: '',
     password: '',
-    adminKey: '', // 관리자 전용 인증 키
   });
 
-  // 🔹 페이지 이동용 Hook (로그인 성공 시 사용)
+  // 🔹 페이지 이동을 위한 훅
   const navigate = useNavigate();
 
-  // 🔹 입력값 변경 핸들러
+  // 🔹 입력 변경 핸들러
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // 🔹 로그인 요청 핸들러 (백엔드 연동 포함)
+  // 🔹 로그인 제출 처리
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const { username, password } = formData;
 
-    const { username, password, adminKey } = formData;
-
-    // 🔸 클라이언트 측 유효성 검사
-    if (!username || !password || !adminKey) {
-      alert('모든 항목을 입력해주세요.');
+    if (!username || !password) {
+      alert('아이디와 비밀번호를 입력해주세요.');
       return;
     }
 
     try {
-      // ✅ Flask 백엔드 로그인 API 호출
-      const res = await fetch('http://localhost:5000/api/auth/admin-login', {
+      // ✅ 관리자 로그인 요청 (role 없이)
+      const res = await fetch('http://<EC2-IP>:5000/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json', // request.json 사용 가능하도록
-        },
-        body: JSON.stringify({
-          username,
-          password,
-          admin_key: adminKey, // 백엔드에서는 admin_key 필드로 받음
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }), // ❗ role 제거됨
       });
 
       if (!res.ok) {
-        throw new Error('로그인 실패');
+        if (res.status === 401) {
+          alert('로그인 실패: 아이디 또는 비밀번호를 확인해주세요.');
+          return;
+        }
+        throw new Error('서버 오류');
       }
 
-      const result = await res.json();
+      const { access_token } = await res.json();
 
-      // ✅ JWT 토큰 등 로그인 후 처리 (옵션)
-      // localStorage.setItem('token', result.token);
+      // ✅ 토큰 저장
+      localStorage.setItem('token', access_token);
 
-      // ✅ 로그인 성공 후 관리자 대시보드로 이동
-      navigate('/admin-dashboard');
+      // ✅ 관리자 대시보드로 이동
+      navigate('/admin');
     } catch (error) {
       console.error('로그인 오류:', error);
-      alert('로그인에 실패했습니다. 아이디, 비밀번호, 관리자 키를 다시 확인해주세요.');
+      alert('로그인 중 오류가 발생했습니다.');
     }
   };
 
@@ -77,6 +72,7 @@ function AdminLoginPage() {
 
       {/* 🔹 로그인 폼 */}
       <form className="admin-login-form" onSubmit={handleSubmit}>
+        {/* 아이디 입력 */}
         <label htmlFor="username">아이디</label>
         <input
           type="text"
@@ -88,34 +84,25 @@ function AdminLoginPage() {
           required
         />
 
+        {/* 비밀번호 입력 */}
         <label htmlFor="password">비밀번호</label>
         <input
           type="password"
           id="password"
           name="password"
-          placeholder="관리자 비밀번호를 입력하세요"
+          placeholder="비밀번호를 입력하세요"
           value={formData.password}
           onChange={handleChange}
           required
         />
 
-        <label htmlFor="adminKey">관리자 키</label>
-        <input
-          type="password"
-          id="adminKey"
-          name="adminKey"
-          placeholder="관리자 키를 입력하세요"
-          value={formData.adminKey}
-          onChange={handleChange}
-          required
-        />
-
+        {/* 로그인 버튼 */}
         <button type="submit" className="admin-login-button">
           관리자 로그인
         </button>
       </form>
 
-      {/* 🔹 회원가입 이동 링크 */}
+      {/* 회원가입 링크 */}
       <div className="admin-auth-links">
         계정이 없으신가요? <Link to="/admin-register">관리자 회원가입</Link>
       </div>

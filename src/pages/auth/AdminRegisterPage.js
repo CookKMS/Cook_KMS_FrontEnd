@@ -5,24 +5,24 @@ import { Link, useNavigate } from 'react-router-dom';
 import '../../styles/auth/AdminRegisterPage.css';
 
 function AdminRegisterPage() {
-  // 🔹 관리자 회원가입 입력 필드 상태 관리
+  // 🔹 관리자 회원가입 입력 상태 관리
   const [formData, setFormData] = useState({
     username: '',
     password: '',
     confirmPassword: '',
-    adminKey: '', // 관리자 인증 키
+    adminKey: '', // 관리자 전용 키 입력 필드
   });
 
-  const [isChecking, setIsChecking] = useState(false); // 중복 확인 중 여부
+  const [isChecking, setIsChecking] = useState(false); // 중복 확인 진행 중 여부
   const navigate = useNavigate();
 
-  // 🔹 입력값 변경 핸들러
+  // 🔹 입력 변경 핸들러
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // 🔹 아이디 중복 확인 요청 (Flask API 사용)
+  // 🔹 아이디 중복 확인 요청
   const handleCheckDuplicate = async () => {
     if (!formData.username) {
       alert('아이디를 입력해주세요.');
@@ -32,7 +32,7 @@ function AdminRegisterPage() {
     try {
       setIsChecking(true);
 
-      // ✅ Flask 중복 확인 API 요청
+      // ✅ 중복 확인 API 호출 (POST /api/auth/check-duplicate)
       const res = await fetch('http://localhost:5000/api/auth/check-duplicate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -54,13 +54,12 @@ function AdminRegisterPage() {
     }
   };
 
-  // 🔹 회원가입 제출 핸들러 (백엔드 연동 포함)
+  // 🔹 회원가입 제출 핸들러
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const { username, password, confirmPassword, adminKey } = formData;
 
-    // 🔸 클라이언트 측 유효성 검사
+    // 🔸 필수 항목 클라이언트 측 검사
     if (!username || !password || !confirmPassword || !adminKey) {
       alert('모든 항목을 입력해주세요.');
       return;
@@ -72,14 +71,14 @@ function AdminRegisterPage() {
     }
 
     try {
-      // ✅ Flask 관리자 회원가입 API 요청
-      const res = await fetch('http://localhost:5000/api/auth/admin-register', {
+      // ✅ 관리자 회원가입 API 요청 (POST /api/auth/admin-register)
+      const res = await fetch('http://<EC2-IP>:5000/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           username,
           password,
-          admin_key: adminKey, // 백엔드에서 admin_key 필드로 받음
+          admin_key: adminKey, // 백엔드에서 'admin_key'로 받음
         }),
       });
 
@@ -97,7 +96,7 @@ function AdminRegisterPage() {
 
   return (
     <div className="admin-register-container">
-      {/* 🔹 회원가입 탭 전환 */}
+      {/* 🔹 회원가입 탭 전환 UI */}
       <div className="admin-register-tabs">
         <Link to="/register" className="tab">사용자 회원가입</Link>
         <button className="active">관리자 회원가입</button>
@@ -106,8 +105,9 @@ function AdminRegisterPage() {
 
       <h2>관리자 회원가입</h2>
 
-      {/* 🔹 관리자 회원가입 폼 */}
+      {/* 🔹 관리자 회원가입 입력 폼 */}
       <form className="admin-register-form" onSubmit={handleSubmit}>
+        {/* 🔸 아이디 입력 + 중복확인 버튼 */}
         <div className="input-group">
           <input
             type="text"
@@ -127,6 +127,7 @@ function AdminRegisterPage() {
           </button>
         </div>
 
+        {/* 🔸 비밀번호 입력 */}
         <input
           type="password"
           name="password"
@@ -136,6 +137,7 @@ function AdminRegisterPage() {
           required
         />
 
+        {/* 🔸 비밀번호 확인 입력 */}
         <input
           type="password"
           name="confirmPassword"
@@ -145,6 +147,7 @@ function AdminRegisterPage() {
           required
         />
 
+        {/* 🔸 관리자 전용 키 입력 */}
         <input
           type="password"
           name="adminKey"
@@ -154,11 +157,13 @@ function AdminRegisterPage() {
           required
         />
 
+        {/* 🔸 제출 버튼 */}
         <button type="submit" className="admin-register-button">
           관리자 회원가입
         </button>
       </form>
 
+      {/* 🔸 로그인 페이지 이동 링크 */}
       <div className="admin-auth-links">
         이미 계정이 있으신가요? <Link to="/admin-login">관리자 로그인</Link>
       </div>

@@ -3,22 +3,19 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import '../../styles/auth/LoginPage.css';
+import axios from 'axios';
 
 function UserLoginPage() {
-  // 🔹 로그인 입력 상태 관리
   const [formData, setFormData] = useState({ username: '', password: '' });
   const navigate = useNavigate();
 
-  // 🔹 입력 변경 핸들러
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // 🔹 로그인 제출 핸들러 (Flask 연동 예정)
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const { username, password } = formData;
 
     if (!username || !password) {
@@ -27,31 +24,32 @@ function UserLoginPage() {
     }
 
     try {
-      // ✅ Flask 사용자 로그인 API 요청
-      const res = await fetch('http://localhost:5000/api/auth/user-login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+      // ✅ Flask API 연동 - 사용자 로그인
+      const res = await axios.post('http://<EC2-IP>:5000/api/auth/login', {
+        username,
+        password,
       });
 
-      if (!res.ok) throw new Error('로그인 실패');
+      const { access_token } = res.data;
 
-      const result = await res.json();
+      // ✅ JWT 토큰 저장
+      localStorage.setItem('token', access_token);
 
-      // ✅ JWT 저장 등 인증 처리
-      // localStorage.setItem('user_token', result.token);
-
-      // ✅ 로그인 성공 시 메인 페이지로 이동
+      // ✅ 로그인 성공 → 메인 페이지 이동
       navigate('/');
     } catch (error) {
-      console.error('로그인 실패:', error);
-      alert('로그인에 실패했습니다. 아이디 또는 비밀번호를 확인해주세요.');
+      if (error.response?.status === 400) {
+        alert('아이디 또는 비밀번호가 누락되었습니다.');
+      } else if (error.response?.status === 401) {
+        alert('로그인 실패: 아이디 또는 비밀번호를 확인해주세요.');
+      } else {
+        alert('서버 오류가 발생했습니다.');
+      }
     }
   };
 
   return (
     <div className="login-container">
-      {/* 🔹 로그인 유형 탭 */}
       <div className="login-tabs">
         <button className="active">사용자 로그인</button>
         <Link to="/admin-login" className="tab">관리자 로그인</Link>
@@ -60,7 +58,6 @@ function UserLoginPage() {
 
       <h2>사용자 로그인</h2>
 
-      {/* 🔹 로그인 입력 폼 */}
       <form className="auth-form" onSubmit={handleSubmit}>
         <label htmlFor="username">아이디</label>
         <input
@@ -87,7 +84,6 @@ function UserLoginPage() {
         <button type="submit" className="login-button">로그인</button>
       </form>
 
-      {/* 🔹 회원가입 링크 */}
       <div className="auth-links">
         계정이 없으신가요? <Link to="/register">사용자 회원가입</Link>
       </div>

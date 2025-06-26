@@ -3,24 +3,25 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import '../../styles/auth/RegisterPage.css';
+import axios from 'axios';
 
 function UserRegisterPage() {
-  // 🔹 사용자 회원가입 입력 상태
   const [formData, setFormData] = useState({
     username: '',
     password: '',
     confirmPassword: '',
   });
 
+  const [isChecking, setIsChecking] = useState(false);
   const navigate = useNavigate();
 
-  // 🔹 입력값 변경 핸들러
+  // 입력값 변경 핸들러
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // 🔹 아이디 중복 확인 요청 (Flask 연동 시 사용)
+  // 아이디 중복 확인
   const handleCheckDuplicate = async () => {
     if (!formData.username) {
       alert('아이디를 입력해주세요.');
@@ -28,26 +29,25 @@ function UserRegisterPage() {
     }
 
     try {
-      // ✅ Flask 중복 확인 API: POST /api/auth/check-duplicate
-      const res = await fetch('http://localhost:5000/api/auth/check-duplicate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: formData.username }),
+      setIsChecking(true);
+      const res = await axios.post('http://<EC2-IP>:5000/api/auth/check-duplicate', {
+        username: formData.username,
       });
 
-      const result = await res.json();
-      if (result.exists) {
+      if (res.data.exists) {
         alert('이미 사용 중인 아이디입니다.');
       } else {
         alert('사용 가능한 아이디입니다.');
       }
     } catch (error) {
       console.error('중복 확인 실패:', error);
-      alert('중복 확인 요청 중 오류가 발생했습니다.');
+      alert('중복 확인 중 오류가 발생했습니다.');
+    } finally {
+      setIsChecking(false);
     }
   };
 
-  // 🔹 회원가입 제출 처리 (Flask 연동 포함)
+  // 회원가입 제출 처리
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -64,26 +64,28 @@ function UserRegisterPage() {
     }
 
     try {
-      // ✅ Flask 사용자 회원가입 API 요청
-      const res = await fetch('http://localhost:5000/api/auth/user-register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+      const res = await axios.post('http://<EC2-IP>:5000/api/auth/register', {
+        username,
+        password,
+        role: 'user',
       });
 
-      if (!res.ok) throw new Error('회원가입 실패');
-
-      alert('회원가입이 완료되었습니다. 로그인해주세요.');
-      navigate('/login');
+      if (res.status === 200) {
+        alert(res.data.message || '회원가입이 완료되었습니다.');
+        navigate('/login');
+      }
     } catch (error) {
       console.error('회원가입 실패:', error);
-      alert('회원가입 중 오류가 발생했습니다.');
+      if (error.response?.status === 400) {
+        alert('필수 항목 누락 또는 중복된 아이디입니다.');
+      } else {
+        alert('회원가입 중 서버 오류가 발생했습니다.');
+      }
     }
   };
 
   return (
     <div className="register-container">
-      {/* 🔹 탭 전환 UI */}
       <div className="register-tabs">
         <button className="active">사용자 회원가입</button>
         <Link to="/admin-register" className="tab">관리자 회원가입</Link>
@@ -92,7 +94,6 @@ function UserRegisterPage() {
 
       <h2>사용자 회원가입</h2>
 
-      {/* 🔹 회원가입 입력 폼 */}
       <form className="register-form" onSubmit={handleSubmit}>
         <div className="input-group">
           <input
@@ -107,6 +108,7 @@ function UserRegisterPage() {
             type="button"
             className="check-button"
             onClick={handleCheckDuplicate}
+            disabled={isChecking}
           >
             중복확인
           </button>
@@ -133,7 +135,6 @@ function UserRegisterPage() {
         <button type="submit" className="register-button">회원가입</button>
       </form>
 
-      {/* 🔹 로그인 링크 */}
       <div className="auth-links">
         이미 계정이 있으신가요? <Link to="/login">사용자 로그인</Link>
       </div>
