@@ -109,7 +109,10 @@ export default function MyEmployeePage() {
       <main className="container">
         {/* 문의 내역 */}
         <section>
-          <h2>나의 문의 내역</h2>
+          <hgroup>
+            <h2>나의 문의 내역</h2>
+            <h3>본인이 작성한 문의를 확인하고 수정/삭제할 수 있습니다.</h3>
+          </hgroup>
           <div className="inquiry-list">
             {pagedInquiries.map(item => (
               <article key={item.id} className={`inquiry-card ${expandedInquiryId === item.id ? "expanded" : ""}`} onClick={() => setExpandedInquiryId(id => id === item.id ? null : item.id)}>
@@ -147,7 +150,10 @@ export default function MyEmployeePage() {
 
         {/* 지식 문서 */}
         <section>
-          <h2>나의 지식 문서</h2>
+          <hgroup>
+            <h2>나의 지식관리 내역</h2>
+            <h3>본인이 작성한 지식관리를 확인하고 수정/삭제할 수 있습니다.</h3>
+          </hgroup>
           <div className="inquiry-list">
             {pagedKnowledge.map(item => (
               <article key={item.id} className={`inquiry-card ${expandedKnowledgeId === item.id ? "expanded" : ""}`} onClick={() => setExpandedKnowledgeId(id => id === item.id ? null : item.id)}>

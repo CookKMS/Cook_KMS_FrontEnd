@@ -112,8 +112,8 @@ export default function EmployeeInquiriesPage() {
       <main className="container">
         <section>
           <hgroup>
-            <h2>내 문의 내역</h2>
-            <h3>직원 본인이 등록한 문의를 확인할 수 있습니다.</h3>
+            <h2>고객사 문의</h2>
+            <h3>제조사에 문의하고 답변을 확인할 수 있는 공간입니다.</h3>
           </hgroup>
 
           <div className="search-filter-box">

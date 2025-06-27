@@ -10,7 +10,7 @@ function Header() {
   // ✅ 상단 메뉴 항목 정의
   const menuItems = [
     { path: '/', label: 'Home' },
-    { path: '/my-inquiries', label: '제조사 문의' },
+    { path: '/my-inquiries', label: '고객사 문의' },
     { path: '/faq', label: 'FAQ' },
     { path: '/mypage', label: 'MyPage' },
   ];
@@ -19,7 +19,7 @@ function Header() {
     <header className="main-header">
       {/* 🔹 왼쪽: 로고 + 메뉴 */}
       <div className="left-section">
-        <div className="logo">지식관리</div>
+        <div className="logo">사용자 포털</div>
         <nav className="nav-menu">
           {menuItems.map((item) => (
             <Link
