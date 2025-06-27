@@ -1,9 +1,7 @@
-// src/pages/auth/EmployeeLoginPage.js
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import '../../styles/auth/EmployeeLoginPage.css';
-import axios from 'axios';
+import axios from '../../utils/axiosInstance'; // ✅ axiosInstance 사용
 
 function EmployeeLoginPage() {
   const [formData, setFormData] = useState({
@@ -28,15 +26,14 @@ function EmployeeLoginPage() {
     }
 
     try {
-      // ✅ Flask 로그인 API 요청
-      const res = await axios.post('http://<EC2-IP>:5000/api/auth/login', {
+      // ✅ 로그인 요청
+      const res = await axios.post('/auth/login', {
         username,
         password,
       });
 
       const { access_token } = res.data;
 
-      // ✅ JWT 토큰 저장
       localStorage.setItem('token', access_token);
 
       // ✅ 사원 전용 홈으로 이동

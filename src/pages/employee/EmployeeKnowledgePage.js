@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import EmployeeHeader from './EmployeeHeader';
 import KnowledgeDetailModal from '../../components/KnowledgeDetailModal';
+import axios from '../../utils/axiosInstance'; // ✅ axios 인스턴스 사용
 import '../../styles/Knowledge.css';
 
 const categories = ['전체', '새 기능', '수정', '버그', '문의', '장애', '긴급 지원'];
@@ -14,7 +15,6 @@ export default function EmployeeKnowledgePage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedItem, setSelectedItem] = useState(null);
   const [showNewModal, setShowNewModal] = useState(false);
-  const token = localStorage.getItem('token');
 
   const itemsPerPage = 6;
 
@@ -22,13 +22,8 @@ export default function EmployeeKnowledgePage() {
   useEffect(() => {
     const fetchKnowledge = async () => {
       try {
-        const res = await fetch('http://<EC2-IP>:5000/api/knowledge', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const data = await res.json();
-        setKnowledgeList(data);
+        const res = await axios.get('/knowledge');
+        setKnowledgeList(res.data);
       } catch (err) {
         console.error('지식 문서 불러오기 실패:', err);
         alert('지식 문서를 불러오는 데 실패했습니다.');
@@ -70,15 +65,10 @@ export default function EmployeeKnowledgePage() {
       formData.append('summary', summary);
       if (file) formData.append('file', file);
 
-      const res = await fetch('http://<EC2-IP>:5000/api/knowledge/create', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
+      await axios.post('/knowledge/create', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      if (!res.ok) throw new Error('등록 실패');
       alert('문서가 등록되었습니다.');
       setShowNewModal(false);
       window.location.reload();

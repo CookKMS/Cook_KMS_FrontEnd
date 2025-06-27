@@ -1,19 +1,19 @@
-// src/pages/auth/LoginPage.js
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import '../../styles/auth/LoginPage.css';
-import axios from 'axios';
+import axios from '../../utils/axiosInstance'; // ✅ axiosInstance 사용
 
 function UserLoginPage() {
   const [formData, setFormData] = useState({ username: '', password: '' });
   const navigate = useNavigate();
 
+  // 🔹 입력 변경 핸들러
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // 🔹 로그인 제출 핸들러
   const handleSubmit = async (e) => {
     e.preventDefault();
     const { username, password } = formData;
@@ -24,18 +24,15 @@ function UserLoginPage() {
     }
 
     try {
-      // ✅ Flask API 연동 - 사용자 로그인
-      const res = await axios.post('http://<EC2-IP>:5000/api/auth/login', {
-        username,
-        password,
-      });
+      // ✅ 사용자 로그인 API 요청
+      const res = await axios.post('/auth/login', { username, password });
 
       const { access_token } = res.data;
 
       // ✅ JWT 토큰 저장
       localStorage.setItem('token', access_token);
 
-      // ✅ 로그인 성공 → 메인 페이지 이동
+      // ✅ 로그인 성공 시 홈으로 이동
       navigate('/');
     } catch (error) {
       if (error.response?.status === 400) {

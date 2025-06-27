@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import EmployeeHeader from "./EmployeeHeader";
 import "../../styles/MyEmployeePage.css";
+import axiosInstance from "../../utils/axiosInstance";
 
 export default function MyEmployeePage() {
   const [inquiries, setInquiries] = useState([]);
@@ -18,22 +19,15 @@ export default function MyEmployeePage() {
   const [currentInquiryPage, setCurrentInquiryPage] = useState(1);
   const [currentKnowledgePage, setCurrentKnowledgePage] = useState(1);
   const itemsPerPage = 5;
-  const token = localStorage.getItem("token");
 
-  // ✅ 데이터 불러오기
+  // 🔹 데이터 불러오기
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res1 = await fetch("http://<EC2-IP>:5000/api/my/inquiries", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const res2 = await fetch("http://<EC2-IP>:5000/api/my/knowledge", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data1 = await res1.json();
-        const data2 = await res2.json();
-        setInquiries(data1.data || []);
-        setKnowledgeList(data2.data || []);
+        const res1 = await axiosInstance.get("/my/inquiries");
+        const res2 = await axiosInstance.get("/my/knowledge");
+        setInquiries(res1.data.data || []);
+        setKnowledgeList(res2.data.data || []);
       } catch (err) {
         alert("데이터 불러오기 실패");
         console.error(err);
@@ -42,52 +36,39 @@ export default function MyEmployeePage() {
     fetchData();
   }, []);
 
-  // ✅ 삭제
+  // 🔹 삭제 함수
   const handleDeleteInquiry = async () => {
     try {
-      await fetch(`http://<EC2-IP>:5000/api/inquiry/${confirmDeleteInquiryId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axiosInstance.delete(`/my/inquiries/${confirmDeleteInquiryId}`);
       setInquiries(prev => prev.filter(q => q.id !== confirmDeleteInquiryId));
     } catch {
-      alert("삭제 실패");
+      alert("문의 삭제 실패");
     }
     setConfirmDeleteInquiryId(null);
   };
 
   const handleDeleteKnowledge = async () => {
     try {
-      await fetch(`http://<EC2-IP>:5000/api/knowledge/${confirmDeleteKnowledgeId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axiosInstance.delete(`/my/knowledge/${confirmDeleteKnowledgeId}`);
       setKnowledgeList(prev => prev.filter(k => k.id !== confirmDeleteKnowledgeId));
     } catch {
-      alert("삭제 실패");
+      alert("지식 문서 삭제 실패");
     }
     setConfirmDeleteKnowledgeId(null);
   };
 
-  // ✅ 수정
+  // 🔹 수정 함수
   const handleEditSave = async (e) => {
     e.preventDefault();
     const form = e.target;
     const updated = {
       title: form.title.value,
-      category: form.category.value,
       content: form.inquiryContent.value,
+      category: form.category.value,
     };
 
     try {
-      await fetch(`http://<EC2-IP>:5000/api/inquiry/${editingItem.id}`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updated),
-      });
+      await axiosInstance.put(`/my/inquiries/${editingItem.id}`, updated);
       setInquiries(prev =>
         prev.map(q => (q.id === editingItem.id ? { ...q, ...updated } : q))
       );
@@ -102,19 +83,12 @@ export default function MyEmployeePage() {
     const form = e.target;
     const updated = {
       title: form.title.value,
+      content: form.summary.value,
       category: form.category.value,
-      summary: form.summary.value,
     };
 
     try {
-      await fetch(`http://<EC2-IP>:5000/api/knowledge/${editingKnowledge.id}`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updated),
-      });
+      await axiosInstance.put(`/my/knowledge/${editingKnowledge.id}`, updated);
       setKnowledgeList(prev =>
         prev.map(k => (k.id === editingKnowledge.id ? { ...k, ...updated } : k))
       );
@@ -124,7 +98,6 @@ export default function MyEmployeePage() {
     setEditingKnowledge(null);
   };
 
-  // ✅ 페이지네이션 계산
   const pagedInquiries = inquiries.slice((currentInquiryPage - 1) * itemsPerPage, currentInquiryPage * itemsPerPage);
   const pagedKnowledge = knowledgeList.slice((currentKnowledgePage - 1) * itemsPerPage, currentKnowledgePage * itemsPerPage);
   const inquiryPages = Math.ceil(inquiries.length / itemsPerPage);
@@ -134,28 +107,18 @@ export default function MyEmployeePage() {
     <>
       <EmployeeHeader />
       <main className="container">
-        {/* 🔷 문의 내역 */}
+        {/* 문의 내역 */}
         <section>
-          <hgroup>
-            <h2>나의 문의 내역</h2>
-            <h3>직원이 등록한 문의를 확인하고 수정/삭제할 수 있습니다.</h3>
-          </hgroup>
-
+          <h2>나의 문의 내역</h2>
           <div className="inquiry-list">
             {pagedInquiries.map(item => (
-              <article
-                key={item.id}
-                className={`inquiry-card ${expandedInquiryId === item.id ? "expanded" : ""}`}
-                onClick={() => setExpandedInquiryId(prev => prev === item.id ? null : item.id)}
-              >
+              <article key={item.id} className={`inquiry-card ${expandedInquiryId === item.id ? "expanded" : ""}`} onClick={() => setExpandedInquiryId(id => id === item.id ? null : item.id)}>
                 <header className="card-header">
                   <div className="left-group">
-                    <div className="status-tags">
-                      <span className="category-tag">{item.category}</span>
-                      <span className={`answer-status ${item.status === "02" ? "answered" : "pending"}`}>
-                        {item.status === "02" ? "답변 완료" : "답변 대기"}
-                      </span>
-                    </div>
+                    <span className="category-tag">{item.category}</span>
+                    <span className={`answer-status ${item.status === "02" ? "answered" : "pending"}`}>
+                      {item.status === "02" ? "답변 완료" : "답변 대기"}
+                    </span>
                     <h4>{item.title}</h4>
                   </div>
                   <div className="right-group">
@@ -165,49 +128,29 @@ export default function MyEmployeePage() {
                   </div>
                 </header>
                 {expandedInquiryId === item.id && (
-                  <section className="card-details">
+                  <div className="card-details">
                     <p>{item.content}</p>
-                    {item.answer && (
-                      <div className="answer-section">
-                        <strong>답변</strong>
-                        <p>{item.answer}</p>
-                      </div>
-                    )}
-                  </section>
+                    {item.answer && <div className="answer-section"><strong>답변</strong><p>{item.answer}</p></div>}
+                  </div>
                 )}
               </article>
             ))}
           </div>
-          {/* 문의 페이지네이션 */}
           {inquiryPages > 1 && (
             <nav className="pagination">
               {Array.from({ length: inquiryPages }).map((_, i) => (
-                <button
-                  key={i}
-                  className={currentInquiryPage === i + 1 ? "active" : ""}
-                  onClick={() => setCurrentInquiryPage(i + 1)}
-                >
-                  {i + 1}
-                </button>
+                <button key={i} className={currentInquiryPage === i + 1 ? "active" : ""} onClick={() => setCurrentInquiryPage(i + 1)}>{i + 1}</button>
               ))}
             </nav>
           )}
         </section>
 
-        {/* 🔶 지식 문서 내역 */}
+        {/* 지식 문서 */}
         <section>
-          <hgroup>
-            <h2>나의 지식 문서</h2>
-            <h3>직원이 작성한 문서를 확인하고 수정/삭제할 수 있습니다.</h3>
-          </hgroup>
-
+          <h2>나의 지식 문서</h2>
           <div className="inquiry-list">
             {pagedKnowledge.map(item => (
-              <article
-                key={item.id}
-                className={`inquiry-card ${expandedKnowledgeId === item.id ? "expanded" : ""}`}
-                onClick={() => setExpandedKnowledgeId(prev => prev === item.id ? null : item.id)}
-              >
+              <article key={item.id} className={`inquiry-card ${expandedKnowledgeId === item.id ? "expanded" : ""}`} onClick={() => setExpandedKnowledgeId(id => id === item.id ? null : item.id)}>
                 <header className="card-header">
                   <div className="left-group">
                     <span className="category-tag">{item.category}</span>
@@ -220,24 +163,17 @@ export default function MyEmployeePage() {
                   </div>
                 </header>
                 {expandedKnowledgeId === item.id && (
-                  <section className="card-details">
+                  <div className="card-details">
                     <p>{item.summary}</p>
-                  </section>
+                  </div>
                 )}
               </article>
             ))}
           </div>
-          {/* 지식 페이지네이션 */}
           {knowledgePages > 1 && (
             <nav className="pagination">
               {Array.from({ length: knowledgePages }).map((_, i) => (
-                <button
-                  key={i}
-                  className={currentKnowledgePage === i + 1 ? "active" : ""}
-                  onClick={() => setCurrentKnowledgePage(i + 1)}
-                >
-                  {i + 1}
-                </button>
+                <button key={i} className={currentKnowledgePage === i + 1 ? "active" : ""} onClick={() => setCurrentKnowledgePage(i + 1)}>{i + 1}</button>
               ))}
             </nav>
           )}

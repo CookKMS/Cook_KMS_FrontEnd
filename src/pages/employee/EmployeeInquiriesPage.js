@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import EmployeeHeader from "./EmployeeHeader";
 import "../../styles/MyInquiriesPage.css";
+import axios from "../../utils/axiosInstance"; // ✅ axios 인스턴스
 
 const categories = ["전체", "새 기능", "수정", "버그", "문의", "장애", "긴급 지원"];
 
@@ -16,7 +17,6 @@ export default function EmployeeInquiriesPage() {
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   const inquiriesPerPage = 5;
-  const token = localStorage.getItem("token");
 
   const [newForm, setNewForm] = useState({
     title: "",
@@ -26,24 +26,18 @@ export default function EmployeeInquiriesPage() {
     file: null,
   });
 
-  // 🔹 문의 목록 불러오기 (Flask 연동)
   useEffect(() => {
     const fetchInquiries = async () => {
       try {
-        const res = await fetch("http://<EC2-IP>:5000/api/my/inquiries", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        setInquiries(data.data); // pagination 사용 시 .data로 들어감
+        const res = await axios.get("/my/inquiries");
+        setInquiries(res.data.data);
       } catch (err) {
         console.error("내 문의 내역 불러오기 실패:", err);
       }
     };
-
     fetchInquiries();
   }, []);
 
-  // 🔹 필터 + 검색
   const filtered = inquiries.filter(item => {
     const categoryMatch = filter === "전체" || item.category === filter;
     const searchMatch =
@@ -53,7 +47,6 @@ export default function EmployeeInquiriesPage() {
     return categoryMatch && searchMatch;
   });
 
-  // 🔹 페이지네이션
   const totalPages = Math.ceil(filtered.length / inquiriesPerPage);
   const paged = filtered.slice(
     (currentPage - 1) * inquiriesPerPage,
@@ -73,7 +66,6 @@ export default function EmployeeInquiriesPage() {
     }
   };
 
-  // 🔹 문의 등록
   const submitNewInquiry = async (e) => {
     e.preventDefault();
     const { title, category, customer, inquiryContent, file } = newForm;
@@ -91,36 +83,24 @@ export default function EmployeeInquiriesPage() {
       formData.append("content", inquiryContent);
       if (file) formData.append("file", file);
 
-      const res = await fetch("http://<EC2-IP>:5000/api/inquiry", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      if (!res.ok) throw new Error("등록 실패");
-
+      await axios.post("/inquiry", formData);
       alert("문의가 등록되었습니다.");
       setShowNewModal(false);
-      window.location.reload(); // 새로고침
+      window.location.reload();
     } catch (err) {
       console.error("문의 등록 실패:", err);
       alert("문의 등록 중 오류가 발생했습니다.");
     }
   };
 
-  // 🔹 문의 삭제
   const confirmDelete = async () => {
     try {
-      await fetch(`http://<EC2-IP>:5000/api/inquiry/${confirmDeleteId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.delete(`/inquiry/${confirmDeleteId}`);
       setInquiries(prev => prev.filter(i => i.id !== confirmDeleteId));
-      setConfirmDeleteId(null);
     } catch (err) {
       console.error("삭제 실패:", err);
+    } finally {
+      setConfirmDeleteId(null);
     }
   };
 
@@ -136,7 +116,6 @@ export default function EmployeeInquiriesPage() {
             <h3>직원 본인이 등록한 문의를 확인할 수 있습니다.</h3>
           </hgroup>
 
-          {/* 🔹 검색 및 작성 버튼 */}
           <div className="search-filter-box">
             <input
               type="text"
@@ -152,7 +131,6 @@ export default function EmployeeInquiriesPage() {
             </button>
           </div>
 
-          {/* 🔹 카테고리 필터 */}
           <div className="filter-buttons">
             {categories.map((cat) => (
               <button
@@ -168,7 +146,6 @@ export default function EmployeeInquiriesPage() {
             ))}
           </div>
 
-          {/* 🔹 목록 */}
           <div className="inquiry-header">
             <h3>총 {filtered.length}건</h3>
           </div>
@@ -228,7 +205,6 @@ export default function EmployeeInquiriesPage() {
             ))}
           </div>
 
-          {/* 🔹 페이지네이션 */}
           {totalPages > 1 && (
             <nav className="pagination">
               <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
@@ -251,7 +227,6 @@ export default function EmployeeInquiriesPage() {
         </section>
       </main>
 
-      {/* 🔹 작성 모달 */}
       {showNewModal && (
         <div className="modal-backdrop" onClick={() => setShowNewModal(false)}>
           <form
@@ -292,7 +267,6 @@ export default function EmployeeInquiriesPage() {
         </div>
       )}
 
-      {/* 🔹 삭제 확인 모달 */}
       {confirmDeleteId && (
         <div className="modal-backdrop" onClick={() => setConfirmDeleteId(null)}>
           <div className="modal confirm-delete-modal" onClick={(e) => e.stopPropagation()}>

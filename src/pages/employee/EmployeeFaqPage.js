@@ -2,27 +2,28 @@
 
 import React, { useState, useEffect } from "react";
 import EmployeeHeader from "./EmployeeHeader";
+import axios from "../../utils/axiosInstance"; // ✅ axios 인스턴스 가져오기
 import "../../styles/FAQPage.css";
 
-// ✅ 카테고리 목록 (FAQ 등록 시 선택하는 분류 기준)
 const categories = ['전체', '설치,구성', '접근통제', '계정관리', '기타'];
 
 export default function EmployeeFaqPage() {
-  // 🔹 상태 정의
-  const [faqList, setFaqList] = useState([]); // 전체 FAQ 데이터
-  const [searchTerm, setSearchTerm] = useState(""); // 검색어
-  const [selectedCategory, setSelectedCategory] = useState("전체"); // 선택된 카테고리
-  const [expandedIndex, setExpandedIndex] = useState(null); // 확장된 항목 인덱스
-  const [currentPage, setCurrentPage] = useState(1); // 현재 페이지
+  const [faqList, setFaqList] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("전체");
+  const [expandedIndex, setExpandedIndex] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // 🔹 FAQ 목록 불러오기 (Flask 백엔드 연동)
+  // 🔹 FAQ 목록 불러오기 (axios 사용)
   useEffect(() => {
     const fetchFaqs = async () => {
       try {
-        const res = await fetch("http://<EC2-IP>:5000/api/faq"); // 실제 서버 주소로 교체 필요
-        const data = await res.json();
-        setFaqList(data);
+        const url = selectedCategory === "전체"
+          ? "/faq"
+          : `/faq/category/${encodeURIComponent(selectedCategory)}`;
+        const res = await axios.get(url);
+        setFaqList(res.data);
       } catch (err) {
         console.error("FAQ 불러오기 실패:", err);
         alert("FAQ 데이터를 불러오는 데 실패했습니다.");
@@ -30,9 +31,8 @@ export default function EmployeeFaqPage() {
     };
 
     fetchFaqs();
-  }, []);
+  }, [selectedCategory]);
 
-  // 🔹 검색 및 카테고리 필터 적용된 FAQ
   const filteredFaqs = faqList.filter((faq) => {
     const matchCategory = selectedCategory === "전체" || faq.category === selectedCategory;
     const matchSearch =
@@ -42,14 +42,12 @@ export default function EmployeeFaqPage() {
     return matchCategory && matchSearch;
   });
 
-  // 🔹 현재 페이지에 표시할 FAQ
   const totalPages = Math.ceil(filteredFaqs.length / itemsPerPage);
   const paginatedFaqs = filteredFaqs.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // 🔹 펼치기/접기 토글
   const toggleExpand = (index) => {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
@@ -60,7 +58,6 @@ export default function EmployeeFaqPage() {
       <main className="container faq-page">
         <h1>자주 묻는 질문 (FAQ)</h1>
 
-        {/* 🔹 검색창 */}
         <input
           type="search"
           aria-label="검색어 입력"
@@ -69,11 +66,10 @@ export default function EmployeeFaqPage() {
           value={searchTerm}
           onChange={(e) => {
             setSearchTerm(e.target.value);
-            setCurrentPage(1); // 검색어 바뀌면 페이지 초기화
+            setCurrentPage(1);
           }}
         />
 
-        {/* 🔹 카테고리 필터 버튼 */}
         <nav className="faq-categories" role="list">
           {categories.map((cat) => (
             <button
@@ -91,7 +87,6 @@ export default function EmployeeFaqPage() {
           ))}
         </nav>
 
-        {/* 🔹 FAQ 목록 출력 */}
         <section aria-label="FAQ 목록" className="faq-list">
           {paginatedFaqs.length === 0 ? (
             <p className="no-results">조회되는 FAQ가 없습니다.</p>
@@ -103,7 +98,6 @@ export default function EmployeeFaqPage() {
                   key={faq.id}
                   className={`faq-item ${expandedIndex === globalIndex ? "expanded" : ""}`}
                 >
-                  {/* 🔸 질문 */}
                   <button
                     className="faq-question"
                     onClick={() => toggleExpand(globalIndex)}
@@ -117,7 +111,6 @@ export default function EmployeeFaqPage() {
                     </span>
                   </button>
 
-                  {/* 🔸 답변 */}
                   {expandedIndex === globalIndex && (
                     <div
                       id={`faq-answer-${globalIndex}`}
@@ -134,7 +127,6 @@ export default function EmployeeFaqPage() {
           )}
         </section>
 
-        {/* 🔹 페이지네이션 */}
         {totalPages > 1 && (
           <nav className="pagination" aria-label="페이지 이동">
             <button
@@ -163,7 +155,6 @@ export default function EmployeeFaqPage() {
           </nav>
         )}
 
-        {/* 🔹 결과 수 표시 */}
         <footer className="faq-footer">
           <small>
             {filteredFaqs.length === 0

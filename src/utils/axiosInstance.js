@@ -1,18 +1,23 @@
+// src/utils/axiosInstance.js
+
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: 'http://<EC2_PUBLIC_IP>:5000/api', // Flask API 서버 주소로 <EC2_PUBLIC_IP>를 바꿔야 합니당
+  baseURL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-axiosInstance.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token'); // 또는 access_token
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 export default axiosInstance;

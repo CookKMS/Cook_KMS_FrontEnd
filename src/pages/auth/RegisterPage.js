@@ -1,73 +1,38 @@
-// src/pages/auth/RegisterPage.js
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import '../../styles/auth/RegisterPage.css';
-import axios from 'axios';
+import axios from '../../utils/axiosInstance'; // ✅ axiosInstance 사용
 
 function UserRegisterPage() {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
-    confirmPassword: '',
   });
 
-  const [isChecking, setIsChecking] = useState(false);
   const navigate = useNavigate();
 
-  // 입력값 변경 핸들러
+  // 🔹 입력 변경 핸들러
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // 아이디 중복 확인
-  const handleCheckDuplicate = async () => {
-    if (!formData.username) {
-      alert('아이디를 입력해주세요.');
-      return;
-    }
-
-    try {
-      setIsChecking(true);
-      const res = await axios.post('http://<EC2-IP>:5000/api/auth/check-duplicate', {
-        username: formData.username,
-      });
-
-      if (res.data.exists) {
-        alert('이미 사용 중인 아이디입니다.');
-      } else {
-        alert('사용 가능한 아이디입니다.');
-      }
-    } catch (error) {
-      console.error('중복 확인 실패:', error);
-      alert('중복 확인 중 오류가 발생했습니다.');
-    } finally {
-      setIsChecking(false);
-    }
-  };
-
-  // 회원가입 제출 처리
+  // 🔹 회원가입 제출 처리
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const { username, password, confirmPassword } = formData;
+    const { username, password } = formData;
 
-    if (!username || !password || !confirmPassword) {
-      alert('모든 항목을 입력해주세요.');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      alert('비밀번호가 일치하지 않습니다.');
+    if (!username || !password) {
+      alert('아이디와 비밀번호를 모두 입력해주세요.');
       return;
     }
 
     try {
-      const res = await axios.post('http://<EC2-IP>:5000/api/auth/register', {
+      const res = await axios.post('/auth/register', {
         username,
         password,
-        role: 'user',
+        role: 'user', // ✅ 사용자 역할 고정
       });
 
       if (res.status === 200) {
@@ -104,14 +69,6 @@ function UserRegisterPage() {
             onChange={handleChange}
             required
           />
-          <button
-            type="button"
-            className="check-button"
-            onClick={handleCheckDuplicate}
-            disabled={isChecking}
-          >
-            중복확인
-          </button>
         </div>
 
         <input
@@ -119,15 +76,6 @@ function UserRegisterPage() {
           name="password"
           placeholder="비밀번호를 입력하세요"
           value={formData.password}
-          onChange={handleChange}
-          required
-        />
-
-        <input
-          type="password"
-          name="confirmPassword"
-          placeholder="비밀번호를 다시 입력하세요"
-          value={formData.confirmPassword}
           onChange={handleChange}
           required
         />
