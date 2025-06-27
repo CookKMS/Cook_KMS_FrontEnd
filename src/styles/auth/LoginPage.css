@@ -18,6 +18,24 @@
   overflow: hidden;
   border: 1px solid #007aff;
 }
+/* Home 링크 스타일 */
+.home-link {
+  display: block;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #222;
+  text-decoration: none;
+  margin-bottom: 1.5rem;
+  transition: color 0.3s ease;
+}
+
+.home-link:hover {
+  color: #007bff;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 
 .login-tabs button,
 .login-tabs .tab {
