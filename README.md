@@ -1,85 +1,162 @@
-업로드한 전체 React 프론트엔드 파일 구조와 주요 기능이 구현되어 있습니다. 아래에 각 파일별 핵심 요약을 정리하고, 어떤 역할을 하는지 아래에 참고하시기 바랍니다.
+물론입니다. 아래는 GitHub의 `README.md`에 그대로 복사해서 붙여넣을 수 있도록 마크다운 문법으로 정리한 버전입니다. 특히 **각각의 페이지가 무엇을 하는지** 명확하게 기술해두었습니다.
 
 ---
 
-### 📁 전체 구조 요약
+```markdown
+# 🧠 Cook-KMS (지식 관리 시스템)
 
-| 파일명                               | 역할                             |
-| --------------------------------- | ------------------------------ |
-| `App.js`                          | 전체 페이지 라우팅 및 메인 컴포넌트           |
-| `index.js`                        | React 앱 진입점 (root 렌더링)         |
-| `index.css` / `App.css`           | 전역 스타일 설정                      |
-| `LoginPage.js`, `RegisterPage.js` | 사용자 인증: 로그인 및 회원가입             |
-| `HomePage.js`                     | 로그인 후 메인 대시보드                  |
-| `AdminDashboard.js`               | 관리자 전용 통계 대시보드 (StatCard 포함)   |
-| `FAQPage.js`                      | 자주 묻는 질문(FAQ) 페이지              |
-| `MyInquiriesPage.js`              | 나의 문의 내역 페이지                   |
-| `Knowledge.js`                    | 지식 목록 조회 페이지 (KMS 기능)          |
-| `StatCard.js`                     | AdminDashboard 내 통계 카드 UI 컴포넌트 |
+Cook-KMS는 고객사와 사내 임직원, 관리자 간의 지식 공유와 문의 응답을 효율적으로 관리하는 시스템입니다. 역할 기반 포털 구조로 운영되며, 지식문서, 제조사 문의, FAQ 기능을 통합 제공합니다.
 
 ---
 
-### 📄 주요 파일별 분석
+## 📄 주요 페이지 설명
 
-#### ✅ `App.js`
-
-* 전체 라우팅을 정의합니다.
-* `react-router-dom`의 `Routes`, `Route` 사용
-* `/`, `/login`, `/register`, `/dashboard`, `/faq`, `/my-inquiries`, `/knowledge` 라우트 구성
-
-#### ✅ `index.js`
-
-* `ReactDOM.createRoot`로 앱을 `root` DOM에 마운트합니다.
-* CSS 불러오기 포함 (`index.css`, `App.css`)
-
-#### ✅ `LoginPage.js` / `RegisterPage.js`
-
-* 기본적인 로그인/회원가입 폼 구현됨
-* 스타일 정돈 필요 일부 있음 (예: 버튼 y축 정렬 문제는 이전에 언급된 개선사항 반영 필요)
-
-#### ✅ `HomePage.js`
-
-* 로그인 후 접속하는 사용자 홈 화면
-* 현재는 환영 메시지 정도만 표시됨
-
-#### ✅ `AdminDashboard.js`
-
-* 관리자 권한 전용 페이지로 통계 카드 컴포넌트(`StatCard`)를 3개 렌더링
-* 추후 API 연동을 위해 `useEffect` 내부에 주석으로 `fetch` 코드가 준비됨
-
-#### ✅ `StatCard.js`
-
-* `AdminDashboard`에서 사용하는 재사용 가능한 UI 컴포넌트
-* props로 `title`, `value`, `icon`을 받아 렌더링
-
-#### ✅ `FAQPage.js`
-
-* FAQ 목록 테이블 + 등록 폼 존재
-* 카테고리 선택 가능
-* 파일 업로드 input 포함 (아직 기능 미연결)
-* `useState`, `useEffect`, `map` 등으로 간단한 CRUD UI 흉내만 구현됨
-
-#### ✅ `MyInquiriesPage.js`
-
-* 사용자 자신의 문의 내역 리스트 렌더링
-* 현재는 `dummy` 데이터 기반 `map` 렌더링만 되어 있음
-
-#### ✅ `Knowledge.js`
-
-* 지식 목록을 카드 형식으로 보여줌
-* 각 항목은 제목, 작성자, 등록일, 첨부파일 보기 버튼 포함
-* 실제 API 연동 부분은 주석 처리되어 있음
+### 🌐 HomePage.js
+- 메인 홈페이지 화면
+- "지식 검색 시작하기" 버튼 클릭 시 `/Knowledge`로 이동
+- 로그인 여부와 관계없이 접근 가능
 
 ---
 
-### ✅ 추가로 개선하거나 연결할 작업 (추후 작업 제안)
-
-| 항목                   | 설명                                                                                                       |
-| -------------------- | -------------------------------------------------------------------------------------------------------- |
-| 📡 API 연동            | `LoginPage`, `RegisterPage`, `FAQPage`, `Knowledge`, `AdminDashboard` 등은 백엔드와 연동 주석만 있으며, `axios` 연동이 필요 |
-| 📁 파일 업로드            | FAQ 등록 시 첨부파일 input 있음 → Flask 백엔드 `file_bp` API와 연동 예정                                                  |
-| 🎨 스타일 정돈            | 일부 컴포넌트(Button, Input) 높이 정렬 미세 조정 필요                                                                    |
-| 🔐 JWT 연동            | 로그인 후 토큰 저장 및 인증 헤더 설정 로직 추가 예정                                                                          |
-| 📃 Pagination, Modal | 문의 목록 등에 상태 기반 필터링, 모달 처리 및 페이지네이션 로직 미구현 상태                                                             |
+### 📁 Knowledge.js
+- 전체 사용자 대상 지식 문서 목록 제공
+- 검색 기능, 카테고리 필터, 문서 등록 모달 포함
+- 지식 문서 등록 시 첨부파일 업로드 가능
 
 ---
+
+### 💬 MyInquiriesPage.js
+- 사용자(또는 임직원)가 문의를 작성하는 페이지
+- 문의 리스트 조회 + 검색 + 카테고리 필터 가능
+- 문의 등록 시 첨부파일 업로드 가능
+- 본인이 작성한 문의만 표시됨
+
+---
+
+### 🧑‍💻 MyPage.js
+- 사용자 전용 마이페이지
+- 본인이 작성한 문의 내역 목록을 카드 형식으로 보여줌
+- 문의 수정, 삭제 가능 (단, 답변 완료 전 상태만)
+- 답변 여부에 따라 아이콘/버튼 비활성화 처리됨
+
+---
+
+### ❓ FAQPage.js
+- 전체 사용자 조회 가능
+- FAQ 카테고리 필터 및 키워드 검색 가능
+- 아코디언 방식으로 FAQ 열고 닫기 기능 포함
+
+---
+
+### 🏢 EmployeeHome.js
+- 사원 전용 메인 홈
+- “지식 문서 확인하기” 버튼으로 `/employee-knowledge` 이동
+
+---
+
+### 🧠 EmployeeKnowledgePage.js
+- 사원 전용 지식 관리 페이지
+- 사원이 등록한 지식 문서 열람 및 등록 기능 제공
+- 검색, 카테고리 필터, 등록 모달 포함
+
+---
+
+### 📨 EmployeeInquiriesPage.js
+- 사원 전용 문의 페이지
+- 본인이 작성한 문의 리스트 열람, 등록, 삭제 가능
+- 키워드 검색, 카테고리 필터 포함
+
+---
+
+### 📂 EmployeeFaqPage.js
+- 사원 전용 FAQ 열람 페이지
+- 검색 및 카테고리 필터 가능
+- 아코디언 방식의 UI로 열고 닫기
+
+---
+
+### 🙋‍♂️ MyEmployeePage.js
+- 사원 전용 마이페이지
+- 사원이 작성한 모든 문의와 지식 문서를 한 번에 열람/관리
+- 수정, 삭제 모달 포함
+
+---
+
+### 🛠️ AdminDashboard.js
+- 관리자 전용 대시보드
+- 통계 카드 (지식 문서 수, 답변 대기 문의 수, FAQ 수)
+- 하단에 3가지 테이블 포함:
+  - `KnowledgeTable.js`: 지식 문서 목록 관리 (등록/수정/삭제)
+  - `InquiryTable.js`: 제조사 문의 응답 처리, 답변 등록/수정
+  - `FaqTable.js`: FAQ 항목 목록/등록/수정/삭제
+
+---
+
+## 🗂️ 프로젝트 구조 요약
+
+```
+
+Cook\_KMS\_FrontEnd/
+├── src/pages/
+│   ├── HomePage.js
+│   ├── Knowledge.js
+│   ├── MyInquiriesPage.js
+│   ├── MyPage.js
+│   ├── FAQPage.js
+│   └── employee/
+│       ├── EmployeeHome.js
+│       ├── EmployeeKnowledgePage.js
+│       ├── EmployeeInquiriesPage.js
+│       ├── EmployeeFaqPage.js
+│       └── MyEmployeePage.js
+│   └── admin/
+│       ├── AdminDashboard.js
+│       └── components/
+│           ├── KnowledgeTable.js
+│           ├── InquiryTable.js
+│           └── FaqTable.js
+
+````
+
+---
+
+## 📌 기술 스택
+
+- **Frontend**: React.js, React Router, Axios
+- **Backend**: Flask, MySQL, JWT
+- **Deployment**: AWS EC2, RDS
+
+---
+
+## 🔐 사용자 권한 요약
+
+| 권한    | 문의 작성 | 문의 답변 | 지식 등록 | FAQ 등록 |
+|---------|-----------|------------|------------|-----------|
+| 사용자  | ✅        | ❌         | ❌         | ❌        |
+| 사원    | ✅        | ❌         | ✅         | ❌        |
+| 관리자  | ❌        | ✅         | ✅         | ✅        |
+
+---
+
+## 🛠️ 설치 및 실행
+
+```bash
+# frontend
+cd frontend
+npm install
+npm start
+
+# backend
+cd backend
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python app.py
+````
+
+```
+
+---
+
+필요 시 `backend/`나 API 명세 설명도 추가해드릴 수 있습니다. 원하시면 말씀해주세요.
+```
